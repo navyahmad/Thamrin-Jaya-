@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use App\Actions\Cms\ContentRegistry;
+use App\Actions\Cms\ContentRules;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Validation\ValidationException;
 
 class Site extends Model
 {
@@ -22,6 +25,34 @@ class Site extends Model
             'contact_details' => 'array',
             'is_active' => 'boolean',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        static::saving(function (Site $site): void {
+            ContentRules::immutable($site, 'company_id');
+            ContentRules::immutable($site, 'slug');
+            ContentRules::validateSlug($site->slug);
+            if (($site->company_id === null) !== ($site->slug === 'group')) {
+                throw ValidationException::withMessages(['slug' => 'Holding harus menggunakan identitas group; identitas ini tidak untuk anak perusahaan.']);
+            }
+            ContentRegistry::validateSite($site);
+        });
+        static::deleting(function (Site $site): void {
+            if ($site->company_id === null) {
+                throw ValidationException::withMessages(['site' => 'Situs holding tidak dapat dihapus.']);
+            }
+        });
+    }
+
+    public function resolvedName(): string
+    {
+        return $this->company?->name ?? $this->name;
+    }
+
+    public function resolvedSlug(): string
+    {
+        return $this->company?->slug ?? $this->slug;
     }
 
     public function company(): BelongsTo

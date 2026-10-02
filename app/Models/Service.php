@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Actions\Cms\ContentRules;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -20,6 +21,13 @@ class Service extends Model
             'sort_order' => 'integer',
             'is_active' => 'boolean',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        static::saving(function (Service $service): void {
+            ContentRules::validateSlug($service->slug);
+        });
     }
 
     public function companies(): BelongsToMany

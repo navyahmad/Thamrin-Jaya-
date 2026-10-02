@@ -6,14 +6,14 @@ use App\Models\Company;
 use App\Models\Inquiry;
 use App\Models\Product;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class AdminTest extends TestCase
 {
-    use RefreshDatabase;
+    use DatabaseMigrations;
 
     private function administrator(): User
     {

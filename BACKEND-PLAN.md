@@ -1,6 +1,6 @@
 # Backend Plan — PT Thamrin Jaya Group
 
-Tanggal audit: 2 Oktober 2026. Status: **Tahap 1–3 selesai; tahap 4–15 belum dikerjakan dalam rangkaian ini.**
+Tanggal audit: 2 Oktober 2026. Status: **Tahap 1–5 selesai; tahap 6–15 belum dikerjakan dalam rangkaian ini.**
 
 Dokumen ini membedakan kondisi yang sudah diverifikasi dengan kontrak implementasi berikutnya. Keberadaan tabel tidak berarti CRUD, resolver publik, atau desainnya sudah selesai.
 
@@ -228,8 +228,8 @@ Semua tahap implementasi wajib membaca kontrak ini, mengikuti AGENTS.md, mempert
 | 1 | Audit dan kontrak backend | Kode, database, route, test baseline dan keputusan terdokumentasi | Selesai |
 | 2 | Fortify dasar | Login/logout/reset/ganti password lewat Fortify, view berfungsi, tanpa registrasi dan route ganda; admin:create tetap bekerja; regresi auth lulus | Selesai |
 | 3 | Authorization dan keamanan akun | Policy tiap modul, password confirmation, 2FA setup/challenge/recovery/disable; guest/nonadmin ditolak; tidak bisa menaikkan privilege sendiri | Selesai |
-| 4 | Invariant data dan registry | Satu holding/satu site per company, reserved slug, type/source/template whitelist, status item; migrasi additive; reseed tidak menduplikasi rename/mengembalikan delete | Belum |
-| 5 | Layanan media | Upload/replace/remove konsisten, file bersama aman, rollback dan cascade cleanup diuji dengan storage fake | Belum |
+| 4 | Invariant data dan registry | Satu holding/satu site per company, reserved slug, type/source/template whitelist, status item; migrasi additive; reseed tidak menduplikasi rename/mengembalikan delete | Selesai |
+| 5 | Layanan media | Upload/replace/remove konsisten, file bersama aman, rollback dan cascade cleanup diuji dengan storage fake | Selesai |
 | 6 | Company/site/gateway | Pilih konteks site; profil, branding, kontak, footer/social/SEO, urutan/status panel dapat dikelola; company baru membentuk site konsisten; proteksi delete | Belum |
 | 7 | Pages | CRUD halaman tambahan, empat halaman inti terlindungi, urutan/SEO/draft/publish, slug per site dan dampak menu diuji | Belum |
 | 8 | Katalog/pilar/proses | Refactor request/policy/media; create/edit/delete/order/status/filter/pagination sesuai modul; isolasi perusahaan; tanpa field transaksi | Belum |
@@ -257,7 +257,7 @@ Tahap 13 belum menandakan desain publik final selesai. Tahap 15 tidak mencakup d
 
 ## 12. Langkah berikutnya
 
-Berikutnya **tahap 4: invariant data dan registry**: satu holding, hubungan company/site, reserved slug, allowlist template/section/source, status item, dan inisialisasi seed yang aman terhadap rename/delete. Lanjutkan dengan migration additive dan pertahankan pengaman database pengujian.
+Berikutnya **tahap 6: Company/Site/Gateway CMS**, termasuk pilihan konteks, branding, logo, kontak, footer/social/SEO, urutan/status panel, dan alur pembuatan company+site yang konsisten. Gunakan kontrak registry tahap 4 dan MediaManager tahap 5.
 
 
 ## 13. Hasil tahap 2 — Fortify dasar
@@ -347,9 +347,92 @@ Tanggal implementasi: 2 Oktober 2026. Laravel 13.34.0 dan Fortify 1.40.0 tetap d
 ### Bukti dan batas verifikasi
 
 - `SecurityTest`: **15 tes, 299 assertion lulus**. Mencakup policy 12 model, enforcement controller, batas akun, konfirmasi password kedaluwarsa, setup TOTP, enkripsi/serialisasi, pending setup, challenge, replay TOTP/recovery, regenerasi/disable, TTL, perubahan status akun/password, anti mass assignment, cache headers, dan limiter menggunakan cache database.
-- Hasil suite lengkap dicatat setelah pemeriksaan akhir.
+- Verifikasi akhir `vendor/bin/phpunit`: **70 tests passed, 711 assertions**, durasi runner 15.306 ms (15,306 detik). Meliputi autentikasi, keamanan, CRUD admin, portal, migration dan struktur konten dinamis.
+- `php artisan view:cache --no-interaction`: seluruh template Blade berhasil dikompilasi, termasuk pengaturan dan challenge 2FA. Pemeriksaan akhir tahap 3 tidak lagi pending.
 - `php artisan migrate:status --no-interaction`: keenam migration Ran, tidak ada migration tertunda.
 - Route 2FA diverifikasi mengarah ke controller Fortify dan memakai middleware admin/password confirmation sesuai fungsinya.
 - Pint dijalankan pada seluruh file PHP yang diubah. `--dirty` tidak tersedia karena folder bukan repository Git, sehingga formatter memakai path eksplisit.
 - Akun operasional tetap tidak dibuat otomatis. Admin yang sudah dibuat lewat `admin:create` dapat mengaktifkan 2FA di Akun & keamanan → Kelola 2FA setelah login.
 - Tes menggunakan SQLite terisolasi; pengiriman SMTP, pemindaian lewat perangkat autentikator nyata, browser acceptance/CSRF, dan stress test concurrency MySQL belum diklaim selesai. 2FA tidak memerlukan pengiriman email dan tetap opsional.
+
+
+## 15. Hasil tahap 4 — Konsistensi data dan registry
+
+Tanggal implementasi: 2 Oktober 2026. Tidak menambah dependency atau mengubah `.env`.
+
+### Constraint dan kepemilikan
+
+- Migration `2026_10_02_141126_enforce_cms_data_invariants` berhasil diterapkan pada MySQL. Kolom generated `sites.holding_slot` bernilai 1 untuk holding dan NULL untuk anak perusahaan, dengan unique index. Database menolak holding kedua, termasuk insert yang tidak melalui Eloquent. Unique `sites.company_id` yang sudah ada tetap membatasi satu site per perusahaan.
+- Migration memeriksa duplikasi holding sebelum melakukan DDL; tidak memilih atau menghapus holding secara otomatis jika data bermasalah.
+- Model Site menjaga identitas holding `group`, melarang penghapusan holding melalui model, dan mengunci company_id serta slug internal setelah tersimpan. Slug/nama publik anak perusahaan diselesaikan oleh `resolvedSlug()`/`resolvedName()` dari Company; nilai historis di Site tidak menjadi sumber URL kedua.
+- Kepemilikan Page→Site, Section→Page, Item→Section, Menu→Site, MenuItem→Menu, dan katalog/pilar/proses→Company tidak bisa diganti lewat save/update model biasa. Foreign key menu antar-site/antar-parent tetap berlaku.
+- Empat slug halaman inti tidak dapat diganti atau dihapus melalui model. Halaman tambahan tetap dapat mengganti slug. Key section dan menu dikunci agar identitas anchor/slot tidak bergeser.
+- Constraint database membatasi jumlah maksimal satu holding/satu site per company. Database tidak otomatis membuat site ketika company dibuat atau mengharuskan database kosong sudah punya holding. Penyediaan company+site secara lengkap lewat CRUD merupakan tahap 6; seeder tidak dipakai sebagai mekanisme memperbaiki site yang hilang.
+
+### Slug dan registry
+
+- `ContentRules` memusatkan format slug lowercase/dash, batas 100 karakter, daftar root reserved, dan pemeriksaan field immutable. Controller edit perusahaan menggunakan aturan yang sama dengan model; page slug `inquiry` dilindungi untuk endpoint sistem.
+- `ContentRegistry` mengizinkan delapan template key: default, group-gateway, dan enam brand. Template holding/anak dibatasi konteks; font, warna hex, dan theme_settings tervalidasi. Input tidak dapat menentukan path Blade/class sembarangan.
+- Enam belas jenis section memiliki sumber yang ditentukan konteks: company, manual, relations, items, atau contact_details. Varian yang saat ini didukung hanya `default`; menambahkan varian desain baru harus memperluas registry secara eksplisit.
+- Section settings dibatasi pada source dan limit 1–100. Theme settings dibatasi container_width normal/wide dan button_style rounded/square. Item settings saat ini menerima icon dari allowlist; sertifikasi dapat menambah issuer. Field tambahan per jenis akan dikembangkan bersama formulir tahap 10–11, bukan menerima JSON bebas.
+- Gateway hanya dapat dipakai holding. Section placeholder produk/pilar/proses milik holding yang sudah ada tetap dipertahankan nonaktif dan tidak boleh diaktifkan. Section yang membaca relasi tidak menerima SectionItem sebagai sumber data tandingan.
+- Perubahan jenis/variant yang dapat merusak konten ditolak jika section sudah berisi item, body, gambar, atau CTA. Buat section baru untuk perubahan struktur tersebut.
+- Validasi model melindungi jalur Eloquent, termasuk controller yang sudah ada. Bulk update/query builder/raw SQL tidak menjalankan event model; modul berikutnya wajib menggunakan jalur validasi ini dan FormRequest. Hanya constraint DB yang diklaim berlaku juga terhadap raw SQL.
+
+### Status konten dan inisialisasi
+
+- Products, pillars, process_steps mendapat `is_active` dengan default true, cast boolean, dan scope active. Data lama tetap terlihat. Portal lama kini memfilter item nonaktif; daftar admin tetap dapat mengaksesnya. Kontrol status pada form CRUD diselesaikan bersama tahap 8.
+- Tabel teknis `content_initializations` menyimpan key inisialisasi serta completed_at; bukan konten perusahaan atau modul penjualan.
+- `SeedOnce` menjalankan inisialisasi dalam transaksi dengan row lock dan penanda selesai. Kegagalan membatalkan data/penanda; percobaan berikutnya dapat mengulang. Setelah berhasil, seeder tidak menambahkan ulang data berdasarkan slug/key yang bisa berubah.
+- `demo-companies-v1` membatasi inisialisasi enam perusahaan demo. `dynamic-content-v1` membatasi inisialisasi struktur site/pages/sections/items/menu/services/pivot.
+- Migration mengadopsi data yang sudah ada dengan menandai inisialisasi terkait selesai. Tidak mengisi ulang kekosongan secara diam-diam. Pada database parsial yang sudah memiliki company/site, data diperlakukan sebagai hasil pengelolaan yang harus dipertahankan; perbaikan parsial memerlukan operasi yang disengaja dan ditinjau.
+- DatabaseSeeder hanya berjalan pada environment local/testing. Untuk inisialisasi struktur tanpa perusahaan demo tersedia DynamicContentSeeder. Keduanya bukan perintah rutin deployment atau cara menambah perusahaan baru sesudah inisialisasi. Jangan menghapus penanda hanya untuk memaksa seed ulang.
+- Fixture Site sekarang default anak perusahaan; fixture holding menggunakan state `group()`. Fixture section menggunakan carousel/items yang valid terhadap registry.
+
+### Verifikasi
+
+- `vendor/bin/phpunit`: **84 tes lulus, 779 assertion**, durasi runner 29.811 ms (29,811 detik). Termasuk 14 tes invariant baru, tes relasi/seeder sebelumnya, keamanan Fortify/2FA, portal, dan CRUD admin.
+- Tes baru meliputi unique holding raw SQL, pemilik/halaman inti, slug reserved, template/settings ilegal, konteks section/item, perubahan jenis, reseed setelah rename/delete/detach, rollback inisialisasi, status katalog, larangan demo production, serta up/down/up migration additive pada koneksi SQLite terisolasi dengan data lama tetap utuh.
+- `php artisan migrate --no-interaction`: migration tahap 4 DONE pada MySQL proyek. Tidak menjalankan migrate:fresh, rollback, ataupun seeder pada database utama.
+- Pemeriksaan hanya-baca sesudah migration: companies 6, sites 7, pages 28, sections 112, items 6, menus 14, menu_items 112, services 4, pivot 6, products 18, pillars 24, process_steps 25, inquiries 0, users 0. Holding 1; kedua penanda inisialisasi berstatus initialized.
+- Pint selesai pada perubahan PHP; `git diff --check` tidak menemukan kesalahan whitespace.
+- Pengujian migration aktual MySQL dan suite SQLite berhasil. Uji race/concurrency MySQL yang lengkap tetap tahap 15. Renderer publik berbasis registry, seluruh form CMS, media lifecycle, dan enam desain final belum dinyatakan selesai oleh tahap ini.
+
+
+## 16. Hasil tahap 5 — Pengelolaan media bersama
+
+Tanggal implementasi: 2 Oktober 2026. Tidak menambah dependency, migration, atau mengubah `.env` dan data MySQL utama.
+
+### Layanan dan integrasi
+
+- `App\Actions\Cms\MediaManager` menjadi layanan save/upload/replace/remove/delete dan resolver URL bersama. CompanyController dan ContentController sekarang memakainya, setelah authorization dan validasi request.
+- Upload banner/foto fasilitas/foto produk tetap melalui form yang sudah ada. Seluruh preview media admin dan portal lama memakai resolver yang sama; tidak lagi membentuk URL upload dengan menambahkan storage secara terpisah.
+- Aset bawaan menggunakan path `images/nama-file` dan tidak disalin atau dihapus oleh CRUD. Pemilihan aset bawaan melalui layanan hanya menerima file yang benar-benar ada di public/images dengan nama/ekstensi aman. SVG hanya diperbolehkan untuk aset bawaan yang dipercaya, bukan upload.
+- Upload baru disimpan dengan nama hash di `media/images` atau `media/documents` pada disk public. Path legacy `companies/...`, `products/...`, `storage/...`, dan `/storage/...` tetap dapat dibaca serta diperiksa referensinya.
+- Resolver menolak URL eksternal/protocol-relative, traversal, backslash, encoded path, dan prefix di luar area media. Tidak menghapus file dengan path yang tidak dapat dinormalisasi sebagai upload.
+- Gambar JPG/JPEG/PNG/WebP maksimal 5 MB. Dokumen PDF maksimal 10 MB hanya pada `SectionItem.file_path` milik section certifications. Form sertifikasi sendiri baru dibuat pada tahap 11.
+
+### Transaksi dan kegagalan
+
+- `save(record, attributes, uploads)` memiliki transaksi terluarnya sendiri pada koneksi default. Pemanggilan dari transaksi lain ditolak sebelum upload, agar rollback pemanggil tidak meninggalkan file tanpa record. Controller/model lain jangan membungkus layanan ini dalam DB::transaction tambahan.
+- Untuk update, record dibaca ulang dengan row lock. File baru dicatat sebelum upaya penyimpanan; kegagalan storage/validasi/save DB membersihkan kandidat file baru dan membatalkan perubahan DB. Penyimpanan banyak file pada satu record bersifat satu operasi.
+- Sesudah commit nyata, file lama diperiksa lalu dihapus hanya jika sudah tidak direferensikan. Tidak menghapus file lama sebelum commit atau menjalankan cleanup di dalam transaksi. Field media tidak boleh disisipkan langsung ke attributes; gunakan uploads berupa UploadedFile, null untuk hapus, atau path aset bawaan tervalidasi.
+- Jika cleanup storage gagal setelah commit, perubahan data yang berhasil tetap dipertahankan; log mencatat path dan kebutuhan retry. Tidak menyatakan file sudah terhapus ketika storage menolak.
+- `media:cleanup PATH` memeriksa satu path upload secara read-only. `media:cleanup PATH --delete` mengulang cleanup file yang tercatat gagal, dengan pemeriksaan referensi ulang. Aset bawaan dan path berbahaya ditolak; file yang masih dipakai dilewati. Tidak menjalankan perintah penghapusan ini pada data utama dalam tahap 5.
+- Retry belum otomatis melalui queue. Operator dapat memakai perintah tersebut untuk path pada log setelah operasi selesai. Jangan menggunakannya sebagai pemindai upload yang masih berlangsung.
+
+### Referensi dan cascade
+
+- Referensi diperiksa pada Company banner/about, Product image, Site logo/favicon, Page OG image, PageSection image, SectionItem image/file, dan Service image. Semua bentuk path legacy yang didukung dibandingkan sebelum cleanup.
+- `delete(record)` mengumpulkan path record dan turunannya sebelum penghapusan: Company→Site/Products, Site→Pages, Page→Sections, Section→Items. Ini menangani FK cascade yang tidak memicu event Eloquent anak. File yang juga dipakai di luar cabang tetap dipertahankan.
+- Layanan tetap menjalankan event model dan constraint DB: penolakan penghapusan holding, atau company yang masih memiliki inquiry, tidak menghapus medianya.
+- Modul baru wajib menggunakan layanan ini untuk operasi media dan penghapusan berjenjang. Raw SQL/delete model langsung tidak otomatis menjalankan lifecycle media; aturan bisnis penghapusan tetap tanggung jawab modul sesuai kontrak tahap 1.
+- Upload harus direferensikan lewat kolom yang terdaftar di `MediaManager::COLUMNS`, bukan disisipkan sebagai path tersembunyi pada JSON/body. Tambahkan registry referensi jika ada kolom media baru. Uji race dengan penulis raw SQL eksternal tidak termasuk jaminan tahap ini.
+
+### Verifikasi
+
+- MediaTest: **14 tes, 52 assertion lulus**, menggunakan Storage fake. Meliputi path aman/legacy, aset bawaan, file bersama, rollback DB/multi-upload, FK restrict, cascade, PDF sertifikasi, transaksi bersarang, kegagalan cleanup, file terlalu besar, script berkedok gambar, retry command, dan kegagalan tulis storage.
+- AdminTest menggunakan DatabaseMigrations pada SQLite terisolasi agar perilaku setelah commit benar-benar diuji, bukan transaksi pengujian luar yang selalu di-rollback. Pengaman tests/TestCase tetap melarang penggunaan database utama.
+- Verifikasi akhir `vendor/bin/phpunit`: **98 tes lulus, 831 assertion**, durasi runner 45.039 ms (45,039 detik). Regresi autentikasi, 2FA, invariant data, portal, dan CRUD admin tetap lulus.
+- Pint selesai; `git diff --check` bersih. `php artisan view:cache --no-interaction` berhasil mengompilasi seluruh Blade.
+- Tidak membangun media library UI terpisah. Form CRUD yang tersedia telah terintegrasi; modul branding/section/sertifikat berikutnya menggunakan layanan yang sama.

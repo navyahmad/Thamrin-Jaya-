@@ -2,13 +2,14 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Actions\Cms\MediaManager;
 use App\Http\Controllers\Controller;
 use App\Models\Company;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
 class ContentController extends Controller
@@ -47,7 +48,7 @@ class ContentController extends Controller
                 'name' => ['required', 'string', 'max:150'],
                 'category' => ['required', 'string', 'max:100'],
                 'specifications' => ['nullable', 'string', 'max:5000'],
-                'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+                'image' => MediaManager::imageRules(),
                 'remove_image' => ['sometimes', 'boolean'],
             ];
         } else {
@@ -55,20 +56,25 @@ class ContentController extends Controller
         }
         $data = $request->validate($rules);
         unset($data['image'], $data['remove_image']);
-        if ($type === 'products' && $request->hasFile('image')) {
-            $data['image_path'] = $request->file('image')->store('products', 'public');
-        } elseif ($type === 'products' && $request->boolean('remove_image')) {
-            $data['image_path'] = null;
-        }
 
         return $data;
+    }
+
+    /** @return array<string, UploadedFile|null> */
+    private function uploads(Request $request, string $type): array
+    {
+        if ($type === 'products' && ($request->hasFile('image') || $request->boolean('remove_image'))) {
+            return ['image_path' => $request->file('image')];
+        }
+
+        return [];
     }
 
     public function store(Request $request, Company $company, string $type): RedirectResponse
     {
         $relation = $this->relation($company, $type);
         Gate::authorize('create', $relation->getRelated()::class);
-        $relation->create($this->validated($request, $type));
+        app(MediaManager::class)->save($relation->make(), $this->validated($request, $type), $this->uploads($request, $type));
 
         return redirect()->to(route('admin.companies.edit', $company).'#'.$type)->with('success', 'Konten berhasil ditambahkan.');
     }
@@ -77,12 +83,7 @@ class ContentController extends Controller
     {
         $record = $this->relation($company, $type)->findOrFail($item);
         Gate::authorize('update', $record);
-        $oldImage = $record->image_path;
-        $data = $this->validated($request, $type);
-        $record->update($data);
-        if ($oldImage && array_key_exists('image_path', $data)) {
-            Storage::disk('public')->delete($oldImage);
-        }
+        app(MediaManager::class)->save($record, $this->validated($request, $type), $this->uploads($request, $type));
 
         return redirect()->to(route('admin.companies.edit', $company).'#'.$type)->with('success', 'Konten berhasil diperbarui.');
     }
@@ -91,11 +92,7 @@ class ContentController extends Controller
     {
         $record = $this->relation($company, $type)->findOrFail($item);
         Gate::authorize('delete', $record);
-        $image = $record->image_path;
-        $record->delete();
-        if ($image) {
-            Storage::disk('public')->delete($image);
-        }
+        app(MediaManager::class)->delete($record);
 
         return redirect()->to(route('admin.companies.edit', $company).'#'.$type)->with('success', 'Konten berhasil dihapus.');
     }

@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\CompanyController;
 use App\Http\Controllers\Admin\ContentController;
 use App\Http\Controllers\Admin\InboxController;
+use App\Http\Controllers\Admin\SiteController;
 use App\Http\Controllers\PortalController;
 use App\Http\Middleware\PrivateAdminResponse;
 use Illuminate\Support\Facades\Route;
@@ -10,6 +11,10 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', [PortalController::class, 'home'])->name('home');
 Route::prefix('admin')->name('admin.')->middleware([PrivateAdminResponse::class, 'auth', 'auth.session', 'can:access-admin'])->group(function (): void {
     Route::get('/', [CompanyController::class, 'dashboard'])->name('dashboard');
+    Route::get('/companies/create', [CompanyController::class, 'create'])->name('companies.create');
+    Route::post('/companies', [CompanyController::class, 'store'])->name('companies.store');
+    Route::delete('/companies/{company}', [CompanyController::class, 'destroy'])->name('companies.destroy');
+    Route::resource('sites', SiteController::class)->only(['index', 'edit', 'update', 'destroy']);
     Route::get('/companies/{company}/edit', [CompanyController::class, 'edit'])->name('companies.edit');
     Route::put('/companies/{company}', [CompanyController::class, 'update'])->name('companies.update');
     Route::get('/companies/{company}/{type}/create', [ContentController::class, 'create'])->name('content.create');

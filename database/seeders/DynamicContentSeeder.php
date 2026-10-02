@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Actions\Cms\SeedOnce;
 use App\Models\Company;
 use App\Models\Service;
 use App\Models\Site;
@@ -12,7 +13,7 @@ class DynamicContentSeeder extends Seeder
 {
     public function run(): void
     {
-        DB::transaction(function (): void {
+        SeedOnce::run('dynamic-content-v1', function (): void {
             $services = collect([
                 ['cigarette-material', 'Cigarette Material', ['sinar-jaya']],
                 ['packaging-printing', 'Packaging Printing', ['globalindo', 'hte-rotopack', 'top-printing']],

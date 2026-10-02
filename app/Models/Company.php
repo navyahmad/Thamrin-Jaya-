@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Actions\Cms\ContentRules;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -17,6 +18,22 @@ class Company extends Model
     protected function casts(): array
     {
         return ['is_active' => 'boolean', 'is_demo' => 'boolean'];
+    }
+
+    protected static function booted(): void
+    {
+        static::saving(function (Company $company): void {
+            ContentRules::validateSlug($company->slug, true);
+        });
+    }
+
+    public function scopeVisible(\Illuminate\Database\Eloquent\Builder $query): \Illuminate\Database\Eloquent\Builder
+    {
+        return $query->where('is_active', true)->where(function ($query): void {
+            $query->whereDoesntHave('site')->orWhereHas('site', fn ($site) => $site->where('is_active', true)->where(function ($pages): void {
+                $pages->whereDoesntHave('pages', fn ($page) => $page->where('slug', 'home'))->orWhereHas('pages', fn ($page) => $page->where('slug', 'home')->where('is_published', true));
+            }));
+        });
     }
 
     public function site(): HasOne

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Actions\Cms\ContentRules;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -65,6 +66,7 @@ class MenuItem extends Model
     protected static function booted(): void
     {
         static::saving(function (MenuItem $item): void {
+            ContentRules::immutable($item, 'menu_id');
             $menu = Menu::findOrFail($item->menu_id);
             $item->site_id = $menu->site_id;
             $visited = [];

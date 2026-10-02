@@ -193,7 +193,7 @@ class DynamicContentTest extends TestCase
         $company = Company::factory()->create(['phone' => '021123456']);
         $site = Site::factory()->for($company)->create(['contact_details' => ['phone' => 'stale-number']]);
         $this->assertSame('021123456', $site->resolvedContactDetails()['phone']);
-        $group = Site::factory()->create(['contact_details' => ['email' => 'group@example.test']]);
+        $group = Site::factory()->group()->create(['contact_details' => ['email' => 'group@example.test']]);
         $this->assertSame('group@example.test', $group->resolvedContactDetails()['email']);
     }
 

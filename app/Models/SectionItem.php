@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Actions\Cms\ContentRegistry;
+use App\Actions\Cms\ContentRules;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -21,6 +23,14 @@ class SectionItem extends Model
             'is_active' => 'boolean',
             'occurred_on' => 'date',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        static::saving(function (SectionItem $item): void {
+            ContentRules::immutable($item, 'page_section_id');
+            ContentRegistry::validateItem($item);
+        });
     }
 
     public function section(): BelongsTo

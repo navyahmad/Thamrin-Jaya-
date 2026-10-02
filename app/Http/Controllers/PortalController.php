@@ -11,19 +11,21 @@ class PortalController extends Controller
 {
     public function home(): View
     {
-        return view('portal.home', ['companies' => Company::where('is_active', true)->orderBy('sort_order')->orderBy('id')->get()]);
+        abort_if(\App\Models\Site::whereNull('company_id')->where('is_active', false)->exists(), 404);
+
+        return view('portal.home', ['companies' => Company::visible()->with('site')->orderBy('sort_order')->orderBy('id')->get()]);
     }
 
     public function company(Company $company): View
     {
-        abort_unless($company->is_active, 404);
+        abort_unless(Company::visible()->whereKey($company->id)->exists(), 404);
 
-        return view('portal.company', ['company' => $company->load(['products', 'pillars', 'processSteps'])]);
+        return view('portal.company', ['company' => $company->load(['products' => fn ($query) => $query->active(), 'pillars' => fn ($query) => $query->active(), 'processSteps' => fn ($query) => $query->active()])]);
     }
 
     public function inquiry(Request $request, Company $company): RedirectResponse
     {
-        abort_unless($company->is_active, 404);
+        abort_unless(Company::visible()->whereKey($company->id)->exists(), 404);
         $data = $request->validate([
             'name' => ['required', 'string', 'max:120'],
             'email' => ['required', 'email', 'max:255'],

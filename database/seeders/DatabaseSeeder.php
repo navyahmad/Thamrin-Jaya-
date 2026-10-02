@@ -2,12 +2,24 @@
 
 namespace Database\Seeders;
 
+use App\Actions\Cms\SeedOnce;
 use App\Models\Company;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
 {
     public function run(): void
+    {
+        if (! app()->environment(['local', 'testing'])) {
+            throw new \RuntimeException('Seeder demo hanya untuk local/testing. Gunakan DynamicContentSeeder untuk inisialisasi struktur.');
+        }
+        SeedOnce::run('demo-companies-v1', function (): void {
+            $this->initializeCompanies();
+        });
+        $this->call(DynamicContentSeeder::class);
+    }
+
+    private function initializeCompanies(): void
     {
         $units = [
             ['globalindo', 'PT. Globalindo Thamrin Jaya', 'Globalindo', 'Offset & Packaging', 'Kemasan yang memberi kesan.', '#a64632', 'boxes', 'Solusi cetak offset dan kemasan untuk menerjemahkan identitas merek menjadi pengalaman yang berkesan.', ['Folding Carton', 'Paper Sleeve', 'Custom Packaging']],
@@ -56,6 +68,5 @@ class DatabaseSeeder extends Seeder
                 $company->processSteps()->create(['title' => $title, 'description' => 'Contoh tahap '.strtolower($title).'. Detail proses dapat disesuaikan melalui CMS berdasarkan alur kerja resmi.', 'sort_order' => $stepIndex + 1]);
             }
         }
-        $this->call(DynamicContentSeeder::class);
     }
 }

@@ -32,7 +32,7 @@ class AppServiceProvider extends ServiceProvider
 
         Gate::define('access-admin', fn (User $user): bool => $user->is_admin === true);
         View::composer('layouts.public', function ($view): void {
-            $view->with('navigationCompanies', Company::where('is_active', true)->orderBy('sort_order')->orderBy('id')->get());
+            $view->with('navigationCompanies', Company::visible()->with('site')->orderBy('sort_order')->orderBy('id')->get());
         });
     }
 }

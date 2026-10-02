@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Actions\Cms\ContentRules;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -19,6 +20,14 @@ class Menu extends Model
         return [
             'is_active' => 'boolean',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        static::saving(function (Menu $menu): void {
+            ContentRules::immutable($menu, 'site_id');
+            ContentRules::immutable($menu, 'key');
+        });
     }
 
     public function site(): BelongsTo

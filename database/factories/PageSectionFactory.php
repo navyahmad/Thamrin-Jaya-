@@ -13,7 +13,7 @@ class PageSectionFactory extends Factory
     {
         return [
             'page_id' => Page::factory(), 'key' => fake()->unique()->slug(2),
-            'type' => 'content', 'title' => fake()->sentence(3), 'body' => fake()->paragraph(),
+            'type' => 'carousel', 'settings' => ['source' => 'items'], 'title' => fake()->sentence(3), 'body' => fake()->paragraph(),
             'is_active' => true, 'sort_order' => 0,
         ];
     }

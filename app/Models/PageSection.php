@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Actions\Cms\ContentRegistry;
+use App\Actions\Cms\ContentRules;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -21,6 +23,15 @@ class PageSection extends Model
             'sort_order' => 'integer',
             'is_active' => 'boolean',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        static::saving(function (PageSection $section): void {
+            ContentRules::immutable($section, 'page_id');
+            ContentRules::immutable($section, 'key');
+            ContentRegistry::validateSection($section);
+        });
     }
 
     public function page(): BelongsTo
