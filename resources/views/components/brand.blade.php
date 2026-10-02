@@ -1,0 +1,1 @@
+<a href="{{ route('home') }}" class="brand" aria-label="Thamrin Jaya Group — beranda"><span class="brand-mark">TJ<span>↗</span></span><span class="brand-name">THAMRIN JAYA<span>G R O U P</span></span></a>

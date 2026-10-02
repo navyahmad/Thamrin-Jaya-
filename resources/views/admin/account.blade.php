@@ -1,0 +1,6 @@
+@extends('layouts.admin')
+@section('title', 'Akun & keamanan')
+@section('content')
+<div class="admin-heading"><div><span class="eyebrow">ACCOUNT</span><h1>Akun & keamanan.</h1><p>{{ auth()->user()->name }} · {{ auth()->user()->email }}</p></div></div><form class="panel form-panel narrow-panel" method="POST" action="{{ route('user-password.update') }}">@csrf @method('PUT')<h2>Ganti password</h2><x-field type="password" name="current_password" label="Password saat ini" required autocomplete="current-password"/><x-field type="password" name="password" label="Password baru" required minlength="12" autocomplete="new-password" hint="Minimal 12 karakter, mengandung huruf dan angka."/><x-field type="password" name="password_confirmation" label="Ulangi password baru" required autocomplete="new-password"/><button class="button" type="submit">Perbarui password ✓</button></form>
+<div class="panel form-panel narrow-panel"><h2>Autentikasi dua faktor</h2><p>{{ auth()->user()->hasEnabledTwoFactorAuthentication() ? '2FA aktif.' : '2FA belum aktif.' }}</p><a class="button" href="{{ route('admin.account.two-factor') }}">Kelola 2FA dan recovery code</a></div>
+@endsection
