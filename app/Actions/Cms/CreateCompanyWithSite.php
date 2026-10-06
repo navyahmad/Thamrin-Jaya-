@@ -1,8 +1,11 @@
 <?php
+
 namespace App\Actions\Cms;
+
 use App\Models\Company;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+
 class CreateCompanyWithSite
 {
     public function create(array $attributes): Company
@@ -24,6 +27,7 @@ class CreateCompanyWithSite
                     $menu->items()->create(['key' => $page->slug, 'page_id' => $page->id, 'label' => $page->title, 'type' => 'link', 'sort_order' => $page->sort_order]);
                 }
             }
+
             return $company;
         });
     }

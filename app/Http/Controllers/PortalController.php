@@ -2,42 +2,42 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Cms\PublicContent;
+use App\Http\Requests\StoreInquiryRequest;
 use App\Models\Company;
+use App\Models\Site;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
-use Illuminate\View\View;
 
 class PortalController extends Controller
 {
-    public function home(): View
+    public function groupInquiry(StoreInquiryRequest $request): RedirectResponse
     {
-        abort_if(\App\Models\Site::whereNull('company_id')->where('is_active', false)->exists(), 404);
+        $site = Site::whereNull('company_id')->where('is_active', true)->firstOrFail();
+        abort_unless($site->pages()->where('slug', 'contact')->published()->whereHas('sections', fn (Builder $section): Builder => $section->where('type', 'contact')->active())->exists(), 404);
+        $company = Company::visible()->findOrFail($request->integer('company_id'));
 
-        return view('portal.home', ['companies' => Company::visible()->with('site')->orderBy('sort_order')->orderBy('id')->get()]);
+        return $this->store($request, $company, $site);
     }
 
-    public function company(Company $company): View
+    public function inquiry(StoreInquiryRequest $request, Company $company): RedirectResponse
     {
         abort_unless(Company::visible()->whereKey($company->id)->exists(), 404);
 
-        return view('portal.company', ['company' => $company->load(['products' => fn ($query) => $query->active(), 'pillars' => fn ($query) => $query->active(), 'processSteps' => fn ($query) => $query->active()])]);
+        return $this->store($request, $company, $company->site);
     }
 
-    public function inquiry(Request $request, Company $company): RedirectResponse
+    private function store(StoreInquiryRequest $request, Company $company, Site $site): RedirectResponse
     {
-        abort_unless(Company::visible()->whereKey($company->id)->exists(), 404);
-        $data = $request->validate([
-            'name' => ['required', 'string', 'max:120'],
-            'email' => ['required', 'email', 'max:255'],
-            'phone' => ['nullable', 'string', 'max:40'],
-            'subject' => ['required', 'string', 'max:200'],
-            'message' => ['required', 'string', 'min:10', 'max:5000'],
-            'website' => ['nullable', 'max:0'],
-            'consent' => ['accepted'],
-        ]);
-        unset($data['website'], $data['consent']);
+        $data = $request->safe()->only(['name', 'email', 'phone', 'subject', 'message']);
         $company->inquiries()->create($data);
 
-        return redirect()->to(route('company.show', $company->slug).'#contact')->with('success', 'Pesan Anda telah diterima oleh '.$company->short_name.'. Terima kasih telah menghubungi kami.');
+        $content = app(PublicContent::class);
+        $page = $site->pages()->published()->where('slug', 'contact')->first()
+            ?? $site->pages()->published()->where('slug', 'home')->firstOrFail();
+        $section = $content->sections($page, false)->firstWhere('type', 'contact');
+        $url = $content->pageUrl($page).($section ? '#'.$section->key : '');
+
+        return redirect()->to($url)->with('success', 'Pesan Anda telah diterima oleh '.$company->short_name.'. Terima kasih telah menghubungi kami.');
     }
 }

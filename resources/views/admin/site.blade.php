@@ -1,6 +1,8 @@
 @extends('layouts.admin')
 @section('title', 'Branding '.$site->resolvedName())
 @section('content')
+<p><a class="button button-outline" href="{{ route('admin.sites.menus.index', $site) }}">Kelola menu header/footer →</a></p>
+<p><a class="button button-outline" href="{{ route('admin.sites.pages.index', $site) }}">Kelola halaman situs →</a></p>
 <div class="admin-heading"><div><h1>{{ $site->resolvedName() }}</h1><p>Pengaturan situs dan branding. Pilih identitas visual yang sesuai dengan logo perusahaan.</p></div></div>
 <details class="panel"><summary>Pindah konteks situs</summary>@foreach($sites as $context)<p><a href="{{ route('admin.sites.edit', $context) }}" @if($context->is($site)) aria-current="page" @endif>{{ $context->resolvedName() }}</a></p>@endforeach</details>
 @if($site->company)<p><a class="text-link" href="{{ route('admin.companies.edit', $site->company) }}">Kelola nama, URL, profil, kontak & gateway perusahaan →</a></p>@endif

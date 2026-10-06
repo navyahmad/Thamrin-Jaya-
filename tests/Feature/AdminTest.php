@@ -53,9 +53,12 @@ class AdminTest extends TestCase
     {
         $first = Company::factory()->create(['sort_order' => 1]);
         $second = Company::factory()->create(['sort_order' => 2]);
-        $this->actingAs($this->administrator())->put(route('admin.companies.update', $second), [...$this->companyData($second), 'sort_order' => 0, 'summary' => 'A newly updated company summary.'])->assertSessionHasNoErrors()->assertRedirect();
+        $this->publishSite();
+        $this->publishSite($first);
+        $this->publishSite($second);
+        $this->actingAs($this->administrator())->put(route('admin.companies.update', $second), [...array_diff_key($this->companyData($second), ['accent' => true]), 'sort_order' => 0, 'summary' => 'A newly updated company summary.', 'about' => 'Updated official about.'])->assertSessionHasNoErrors()->assertRedirect();
         $this->get('/')->assertSeeInOrder(['company-'.$second->id, 'company-'.$first->id])->assertSee('A newly updated company summary.');
-        $this->get(route('company.show', $second->slug))->assertSee('A newly updated company summary.');
+        $this->get(route('company.show', $second->slug))->assertSee('Updated official about.');
     }
 
     public function test_reserved_and_duplicate_slugs_and_bad_contact_data_are_rejected(): void
@@ -146,6 +149,8 @@ class AdminTest extends TestCase
         $this->actingAs($this->administrator());
         $this->get(route('admin.inbox.index', ['company_id' => $inquiry->company_id, 'status' => 'new', 'q' => 'Target']))->assertOk()->assertSee('Target inquiry')->assertDontSee('Different company inquiry');
         $this->get(route('admin.inbox.show', $inquiry))->assertOk()->assertDontSee('<script>alert(1)</script>', false);
+        $this->assertNull($inquiry->fresh()->read_at);
+        $this->patch(route('admin.inbox.update', $inquiry), ['read' => 'read'])->assertSessionHasNoErrors();
         $this->assertNotNull($inquiry->fresh()->read_at);
         $this->patch(route('admin.inbox.update', $inquiry), ['status' => 'in_progress'])->assertSessionHasNoErrors();
         $this->assertSame('in_progress', $inquiry->fresh()->status);

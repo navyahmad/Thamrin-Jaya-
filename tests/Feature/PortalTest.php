@@ -27,7 +27,9 @@ class PortalTest extends TestCase
     public function test_profiles_only_show_their_own_catalog(): void
     {
         $first = Company::factory()->create();
+        $this->publishSite($first);
         $second = Company::factory()->create();
+        $this->publishSite($second);
         Product::factory()->for($first)->create(['name' => 'UNIQUE-ALPHA-PRODUCT']);
         Product::factory()->for($second)->create(['name' => 'UNIQUE-BETA-PRODUCT']);
         $this->get(route('company.show', $first->slug))->assertOk()->assertSee('UNIQUE-ALPHA-PRODUCT')->assertDontSee('UNIQUE-BETA-PRODUCT');
@@ -36,6 +38,8 @@ class PortalTest extends TestCase
     public function test_draft_companies_are_hidden_and_cannot_receive_inquiries(): void
     {
         $company = Company::factory()->create(['is_active' => false, 'short_name' => 'HIDDEN UNIT']);
+        $this->publishSite($company);
+        $this->publishSite();
         $this->get('/')->assertDontSee('HIDDEN UNIT');
         $this->get(route('company.show', $company->slug))->assertNotFound();
         $this->post(route('company.inquiry', $company->slug), $this->inquiryData())->assertNotFound();
@@ -44,7 +48,9 @@ class PortalTest extends TestCase
     public function test_inquiry_destination_is_taken_from_route_not_user_input(): void
     {
         $company = Company::factory()->create();
+        $this->publishSite($company);
         $other = Company::factory()->create();
+        $this->publishSite($other);
         $this->post(route('company.inquiry', $company->slug), [...$this->inquiryData(), 'company_id' => $other->id, 'status' => 'resolved'])
             ->assertRedirect(route('company.show', $company->slug).'#contact')->assertSessionHas('success');
         $this->assertDatabaseHas('inquiries', ['company_id' => $company->id, 'status' => 'new', 'email' => 'visitor@example.com']);
@@ -54,6 +60,7 @@ class PortalTest extends TestCase
     public function test_inquiry_validation_honeypot_and_consent(): void
     {
         $company = Company::factory()->create();
+        $this->publishSite($company);
         $this->post(route('company.inquiry', $company->slug), ['email' => 'bad', 'website' => 'spam'])
             ->assertSessionHasErrors(['name', 'email', 'subject', 'message', 'consent', 'website']);
         $this->assertDatabaseCount('inquiries', 0);
@@ -62,6 +69,7 @@ class PortalTest extends TestCase
     public function test_inquiries_are_rate_limited(): void
     {
         $company = Company::factory()->create();
+        $this->publishSite($company);
         for ($attempt = 0; $attempt < 5; $attempt++) {
             $this->post(route('company.inquiry', $company->slug), $this->inquiryData())->assertRedirect();
         }
@@ -77,6 +85,7 @@ class PortalTest extends TestCase
     public function test_public_content_is_escaped_and_optional_contacts_render_safely(): void
     {
         $company = Company::factory()->create(['about' => '<script>alert(1)</script>', 'whatsapp' => '6281234567890', 'map_query' => 'Jakarta & Bandung']);
+        $this->publishSite($company);
         $this->get(route('company.show', $company->slug))->assertOk()
             ->assertSee('&lt;script&gt;alert(1)&lt;/script&gt;', false)
             ->assertDontSee('<script>alert(1)</script>', false)

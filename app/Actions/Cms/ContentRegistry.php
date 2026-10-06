@@ -37,6 +37,12 @@ class ContentRegistry
         ])->validate();
     }
 
+    /** @return list<string> */
+    public static function availableSectionTypes(bool $subsidiary): array
+    {
+        return array_values(array_diff(self::TYPES, $subsidiary ? ['gateway'] : ['products', 'pillars', 'process']));
+    }
+
     public static function source(string $type, bool $subsidiary): string
     {
         return match ($type) {
@@ -74,9 +80,29 @@ class ContentRegistry
             throw ValidationException::withMessages(['type' => 'Jenis section tidak tersedia untuk situs ini.']);
         }
         if ($section->exists && ($section->isDirty('type') || $section->isDirty('variant'))
-            && ($section->items()->exists() || $section->body || $section->image_path || $section->button_url)) {
+            && ($section->items()->exists() || $section->body || $section->image_path || $section->button_url
+                || $section->getOriginal('body') || $section->getOriginal('image_path') || $section->getOriginal('button_url'))) {
             throw ValidationException::withMessages(['type' => 'Section sudah berisi konten. Buat section baru untuk jenis yang berbeda.']);
         }
+    }
+
+    /** @return list<string> */
+    public static function itemFields(string $type): array
+    {
+        return match ($type) {
+            'carousel' => ['subtitle', 'body', 'image', 'image_alt', 'link_label', 'link_url'],
+            'clients' => ['image', 'image_alt', 'link_url'],
+            'capacity' => ['value', 'unit', 'icon'],
+            'csr' => ['body', 'image', 'image_alt', 'occurred_on', 'link_label', 'link_url'],
+            'vision_mission' => ['body'],
+            'certifications' => ['body', 'image', 'image_alt', 'file', 'issuer', 'occurred_on'],
+            default => [],
+        };
+    }
+
+    public static function assertItemSection(PageSection $section): void
+    {
+        abort_unless(($section->settings['source'] ?? null) === 'items' && self::itemFields($section->type) !== [], 404);
     }
 
     public static function validateItem(SectionItem $item): void

@@ -4,7 +4,10 @@ namespace App\Http\Controllers\Admin;
 
 use App\Actions\Cms\MediaManager;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\ContentFilterRequest;
+use App\Http\Requests\ContentRequest;
 use App\Models\Company;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -40,22 +43,38 @@ class ContentController extends Controller
         return view('admin.content', ['company' => $company, 'type' => $type, 'item' => $record]);
     }
 
-    private function validated(Request $request, string $type): array
+    public function index(ContentFilterRequest $request, Company $company, string $type): View
     {
-        $rules = ['description' => ['required', 'string', 'max:10000'], 'sort_order' => ['required', 'integer', 'min:0', 'max:999']];
-        if ($type === 'products') {
-            $rules += [
-                'name' => ['required', 'string', 'max:150'],
-                'category' => ['required', 'string', 'max:100'],
-                'specifications' => ['nullable', 'string', 'max:5000'],
-                'image' => MediaManager::imageRules(),
-                'remove_image' => ['sometimes', 'boolean'],
-            ];
-        } else {
-            $rules['title'] = ['required', 'string', 'max:150'];
+        $query = $this->relation($company, $type);
+        Gate::authorize('viewAny', $query->getRelated()::class);
+        $filters = $request->validated();
+        if ($request->filled('q')) {
+            $query->where(function (Builder $query) use ($filters, $type): void {
+                $query->where($type === 'products' ? 'name' : 'title', 'like', '%'.$filters['q'].'%')
+                    ->orWhere('description', 'like', '%'.$filters['q'].'%');
+            });
         }
-        $data = $request->validate($rules);
+        if (! empty($filters['status'])) {
+            $query->where('is_active', $filters['status'] === 'active');
+        }
+        if ($type === 'products' && $request->filled('category')) {
+            $query->where('category', $filters['category']);
+        }
+        $categories = $type === 'products'
+            ? $company->products()->reorder()->select('category')->distinct()->orderBy('category')->pluck('category')
+            : collect();
+
+        return view('admin.content-index', [
+            'company' => $company, 'type' => $type, 'filters' => $filters,
+            'items' => $query->paginate(15)->withQueryString(), 'categories' => $categories,
+        ]);
+    }
+
+    private function attributes(ContentRequest $request): array
+    {
+        $data = $request->validated();
         unset($data['image'], $data['remove_image']);
+        $data['is_active'] = $request->boolean('is_active');
 
         return $data;
     }
@@ -70,22 +89,22 @@ class ContentController extends Controller
         return [];
     }
 
-    public function store(Request $request, Company $company, string $type): RedirectResponse
+    public function store(ContentRequest $request, Company $company, string $type): RedirectResponse
     {
         $relation = $this->relation($company, $type);
         Gate::authorize('create', $relation->getRelated()::class);
-        app(MediaManager::class)->save($relation->make(), $this->validated($request, $type), $this->uploads($request, $type));
+        app(MediaManager::class)->save($relation->make(), $this->attributes($request), $this->uploads($request, $type));
 
-        return redirect()->to(route('admin.companies.edit', $company).'#'.$type)->with('success', 'Konten berhasil ditambahkan.');
+        return to_route('admin.content.index', [$company, $type])->with('success', 'Konten berhasil ditambahkan.');
     }
 
-    public function update(Request $request, Company $company, string $type, int $item): RedirectResponse
+    public function update(ContentRequest $request, Company $company, string $type, int $item): RedirectResponse
     {
         $record = $this->relation($company, $type)->findOrFail($item);
         Gate::authorize('update', $record);
-        app(MediaManager::class)->save($record, $this->validated($request, $type), $this->uploads($request, $type));
+        app(MediaManager::class)->save($record, $this->attributes($request), $this->uploads($request, $type));
 
-        return redirect()->to(route('admin.companies.edit', $company).'#'.$type)->with('success', 'Konten berhasil diperbarui.');
+        return to_route('admin.content.index', [$company, $type])->with('success', 'Konten berhasil diperbarui.');
     }
 
     public function destroy(Company $company, string $type, int $item): RedirectResponse
@@ -94,6 +113,6 @@ class ContentController extends Controller
         Gate::authorize('delete', $record);
         app(MediaManager::class)->delete($record);
 
-        return redirect()->to(route('admin.companies.edit', $company).'#'.$type)->with('success', 'Konten berhasil dihapus.');
+        return to_route('admin.content.index', [$company, $type])->with('success', 'Konten berhasil dihapus.');
     }
 }

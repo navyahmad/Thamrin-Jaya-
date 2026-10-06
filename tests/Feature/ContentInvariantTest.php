@@ -184,6 +184,7 @@ class ContentInvariantTest extends TestCase
     public function test_inactive_catalog_items_are_hidden_publicly_but_retained_for_admin(): void
     {
         $product = Product::factory()->create(['name' => 'Hidden unique product', 'is_active' => false]);
+        $this->publishSite($product->company);
         $this->get(route('company.show', $product->company->slug))->assertOk()->assertDontSee('Hidden unique product');
         $this->assertSame(0, $product->company->products()->active()->count());
         $this->assertSame(1, $product->company->products()->count());

@@ -1,0 +1,26 @@
+@php
+$primary = preg_match('/^#[a-fA-F0-9]{6}$/', $site->primary_color ?? '') ? $site->primary_color : '#2563eb';
+$secondary = preg_match('/^#[a-fA-F0-9]{6}$/', $site->secondary_color ?? '') ? $site->secondary_color : '#101820';
+$font = in_array($site->font_family, ['Inter','Roboto','Poppins','Montserrat','Arial','sans-serif'], true) ? $site->font_family : 'sans-serif';
+$title = $page->meta_title ?: ($site->seo_title ?: $site->resolvedName());
+$description = $page->meta_description ?: ($site->seo_description ?: ($company?->summary ?? ''));
+@endphp
+<!DOCTYPE html><html lang="id"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>{{ $title }}</title><meta name="description" content="{{ $description }}"><meta name="theme-color" content="{{ $primary }}"><link rel="canonical" href="{{ $content->pageUrl($page) }}"><meta property="og:title" content="{{ $title }}"><meta property="og:description" content="{{ $description }}"><meta property="og:url" content="{{ $content->pageUrl($page) }}"><meta property="og:type" content="website">
+@if($preview)<meta name="robots" content="noindex,nofollow">@endif
+@if($og = \App\Actions\Cms\MediaManager::url($page->og_image_path ?: $site->logo_path))<meta property="og:image" content="{{ $og }}">@endif
+@if($favicon = \App\Actions\Cms\MediaManager::url($site->favicon_path))<link rel="icon" href="{{ $favicon }}">@endif
+@vite(['resources/css/app.css', 'resources/js/app.js'])
+<style>
+.cms-public{--red:{{ $primary }};--brand-secondary:{{ $secondary }};font-family:{{ $font }},sans-serif}.cms-public .brand-logo{max-width:160px;max-height:65px;object-fit:contain}.cms-public .navigation{flex-wrap:wrap}.cms-public .navigation a,.cms-public .mega-menu a{display:block;padding:10px}.cms-public .mega-menu .panel{display:grid;gap:8px;min-width:220px}.cms-public .cms-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:24px}.cms-public .cms-card{border:1px solid var(--line);padding:24px;border-top:4px solid var(--red)}.cms-public .cms-card img{width:100%;max-height:280px;object-fit:contain}.cms-public .cms-copy{white-space:pre-line;margin:16px 0}.cms-public .cms-slides{display:flex;overflow-x:auto;gap:24px;scroll-snap-type:x mandatory}.cms-public .cms-slides .cms-card{min-width:min(85vw,620px);scroll-snap-align:start}.cms-public .site-footer{background:var(--brand-secondary);color:#fff}.cms-public .cms-preview{background:#fff1c2;padding:16px;color:#222}.cms-public.theme-group-gateway .cms-gateway{grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}.cms-public.theme-globalindo .cms-card{border-radius:18px}.cms-public.theme-multipack .cms-card{border-top-width:8px}.cms-public.theme-hte-rotopack .cms-card{border-left:5px solid var(--red)}.cms-public.theme-maxtech .cms-card{background:#f1f3f8}.cms-public.theme-sinar-jaya .cms-card{border-radius:0 24px}.cms-public.theme-top-printing .cms-card{box-shadow:5px 5px var(--red)}
+@if(($site->theme_settings['container_width'] ?? null) === 'wide').cms-public .shell{max-width:1500px}@endif
+@if(($site->theme_settings['button_style'] ?? null) === 'square').cms-public .button{border-radius:0}@endif
+</style></head><body class="cms-public theme-{{ $template }}">
+@if($preview)<div class="cms-preview" role="status">Preview admin — termasuk konten draft/nonaktif. Form pengiriman pesan tidak aktif. <a href="{{ route('admin.sites.pages.edit', [$site, $page]) }}">Kembali ke editor</a></div>@endif
+<a class="skip-link" href="#main">Langsung ke konten</a><div class="topbar"><div class="shell"><span>{{ $site->resolvedName() }}</span><span>{{ $contact['hours'] ?? '' }}</span></div></div>
+<header class="site-header"><div class="shell nav-row"><a href="{{ $company ? route('company.show', $company->slug) : route('home') }}">@if($logo = \App\Actions\Cms\MediaManager::url($site->logo_path))<img class="brand-logo" src="{{ $logo }}" alt="{{ $site->logo_alt ?: $site->resolvedName() }}">@else<strong>{{ $site->resolvedName() }}</strong>@endif</a><button class="mobile-toggle" data-menu-toggle aria-controls="navigation" aria-expanded="false">Menu ☰</button><nav id="navigation" class="navigation" aria-label="Navigasi utama">@include('portal.dynamic-menu', ['nodes' => $headerMenu])</nav></div></header>
+<main id="main"><div class="shell section-space"><h1>{{ $page->title }}</h1>@if($company?->is_demo)<p class="demo-note">Konten contoh · Perlu diverifikasi oleh perusahaan.</p>@endif<x-feedback/></div>
+@foreach($sections as $section)
+@php($records = $content->records($section, $site, $preview))
+@include('portal.dynamic-section')
+@endforeach</main>
+<footer class="site-footer"><div class="shell section-space"><strong>{{ $site->resolvedName() }}</strong><p class="cms-copy">{{ $site->footer_description }}</p><nav aria-label="Navigasi footer">@include('portal.dynamic-menu', ['nodes' => $footerMenu])</nav><div class="form-actions">@foreach($site->social_links ?? [] as $label => $url)@if($url && preg_match('#^https?://#i', $url) && filter_var($url, FILTER_VALIDATE_URL))<a href="{{ $url }}" target="_blank" rel="noopener noreferrer">{{ ucfirst($label) }} ↗</a>@endif @endforeach</div><p>© {{ date('Y') }} {{ $site->copyright_text ?: $site->resolvedName() }}</p></div></footer></body></html>

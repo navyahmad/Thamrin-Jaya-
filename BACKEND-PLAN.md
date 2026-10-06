@@ -1,6 +1,6 @@
 # Backend Plan — PT Thamrin Jaya Group
 
-Tanggal audit: 2 Oktober 2026. Status: **Tahap 1–5 selesai; tahap 6–15 belum dikerjakan dalam rangkaian ini.**
+Tanggal audit: 2 Oktober 2026. Status diperbarui 6 Oktober 2026: **Tahap 1–15 selesai untuk implementasi dan verifikasi lokal; gate produksi masih terbuka (lihat bagian 26).**
 
 Dokumen ini membedakan kondisi yang sudah diverifikasi dengan kontrak implementasi berikutnya. Keberadaan tabel tidak berarti CRUD, resolver publik, atau desainnya sudah selesai.
 
@@ -230,16 +230,16 @@ Semua tahap implementasi wajib membaca kontrak ini, mengikuti AGENTS.md, mempert
 | 3 | Authorization dan keamanan akun | Policy tiap modul, password confirmation, 2FA setup/challenge/recovery/disable; guest/nonadmin ditolak; tidak bisa menaikkan privilege sendiri | Selesai |
 | 4 | Invariant data dan registry | Satu holding/satu site per company, reserved slug, type/source/template whitelist, status item; migrasi additive; reseed tidak menduplikasi rename/mengembalikan delete | Selesai |
 | 5 | Layanan media | Upload/replace/remove konsisten, file bersama aman, rollback dan cascade cleanup diuji dengan storage fake | Selesai |
-| 6 | Company/site/gateway | Pilih konteks site; profil, branding, kontak, footer/social/SEO, urutan/status panel dapat dikelola; company baru membentuk site konsisten; proteksi delete | Belum |
-| 7 | Pages | CRUD halaman tambahan, empat halaman inti terlindungi, urutan/SEO/draft/publish, slug per site dan dampak menu diuji | Belum |
-| 8 | Katalog/pilar/proses | Refactor request/policy/media; create/edit/delete/order/status/filter/pagination sesuai modul; isolasi perusahaan; tanpa field transaksi | Belum |
-| 9 | Services | CRUD empat kelompok dan relasi perusahaan, urutan/status, target menu dan aturan penghapusan konsisten | Belum |
-| 10 | Sections | Form per type, sumber/variant tervalidasi, tambah/edit/delete/reorder/status, tipe tidak kompatibel ditolak | Belum |
-| 11 | Section items | Carousel/client/capacity/CSR/history variant/visi-misi/sertifikat memiliki form tepat; upload/PDF/status/order; tidak membuat klaim resmi palsu | Belum |
-| 12 | Navigasi | Header/footer/mega menu, target eksklusif, tree tanpa siklus, scope/depth/order, tautan invalid/draft difilter | Belum |
-| 13 | Resolver publik dan preview | Seluruh URL/content/theme/menu memakai data CMS, eager loading, status induk dipatuhi; preview aman; Blade minimum cukup untuk membuktikan alur | Belum |
-| 14 | Kontak dan inbox | Form holding/perusahaan masuk ke tujuan benar; inbox read/status/filter/delete; validasi/antispam; notifikasi opsional tidak mengorbankan penyimpanan | Belum |
-| 15 | Integrasi dan kesiapan operasi | Semua admin flow terhubung; suite SQLite dan MySQL terisolasi; pengujian HTTP/browser CSRF/auth/upload/publish; konfigurasi, queue, SMTP, backup/restore dan batas tersisa dicatat | Belum |
+| 6 | Company/site/gateway | Pilih konteks site; profil, branding, kontak, footer/social/SEO, urutan/status panel dapat dikelola; company baru membentuk site konsisten; proteksi delete | Selesai |
+| 7 | Pages | CRUD halaman tambahan, empat halaman inti terlindungi, urutan/SEO/draft/publish, slug per site dan dampak menu diuji | Selesai |
+| 8 | Katalog/pilar/proses | Refactor request/policy/media; create/edit/delete/order/status/filter/pagination sesuai modul; isolasi perusahaan; tanpa field transaksi | Selesai |
+| 9 | Services | CRUD empat kelompok dan relasi perusahaan, urutan/status, target menu dan aturan penghapusan konsisten | Selesai |
+| 10 | Sections | Form per type, sumber/variant tervalidasi, tambah/edit/delete/reorder/status, tipe tidak kompatibel ditolak | Selesai |
+| 11 | Section items | Carousel/client/capacity/CSR/history variant/visi-misi/sertifikat memiliki form tepat; upload/PDF/status/order; tidak membuat klaim resmi palsu | Selesai |
+| 12 | Navigasi | Header/footer/mega menu, target eksklusif, tree tanpa siklus, scope/depth/order, tautan invalid/draft difilter | Selesai |
+| 13 | Resolver publik dan preview | Seluruh URL/content/theme/menu memakai data CMS, eager loading, status induk dipatuhi; preview aman; Blade minimum cukup untuk membuktikan alur | Selesai |
+| 14 | Kontak dan inbox | Form holding/perusahaan masuk ke tujuan benar; inbox read/status/filter/delete; validasi/antispam; notifikasi opsional tidak mengorbankan penyimpanan | Selesai |
+| 15 | Integrasi dan kesiapan operasi | Semua admin flow terhubung; suite SQLite dan MySQL terisolasi; pengujian HTTP/browser CSRF/auth/upload/publish; konfigurasi, queue, SMTP, backup/restore dan batas tersisa dicatat | Selesai lokal; gate produksi tercatat |
 
 Tahap 13 belum menandakan desain publik final selesai. Tahap 15 tidak mencakup deployment otomatis. SMTP, restore backup, maupun browser acceptance tidak boleh ditandai berhasil tanpa pelaksanaan dan bukti yang sesuai.
 
@@ -257,7 +257,7 @@ Tahap 13 belum menandakan desain publik final selesai. Tahap 15 tidak mencakup d
 
 ## 12. Langkah berikutnya
 
-Berikutnya **tahap 6: Company/Site/Gateway CMS**, termasuk pilihan konteks, branding, logo, kontak, footer/social/SEO, urutan/status panel, dan alur pembuatan company+site yang konsisten. Gunakan kontrak registry tahap 4 dan MediaManager tahap 5.
+Rangkaian implementasi backend dan verifikasi lokal selesai. Berikutnya adalah desain frontend final per perusahaan serta penyelesaian gate produksi di bagian 26 sebelum deployment. Belum melakukan deployment atau menyatakan siap produksi.
 
 
 ## 13. Hasil tahap 2 — Fortify dasar
@@ -436,3 +436,226 @@ Tanggal implementasi: 2 Oktober 2026. Tidak menambah dependency, migration, atau
 - Verifikasi akhir `vendor/bin/phpunit`: **98 tes lulus, 831 assertion**, durasi runner 45.039 ms (45,039 detik). Regresi autentikasi, 2FA, invariant data, portal, dan CRUD admin tetap lulus.
 - Pint selesai; `git diff --check` bersih. `php artisan view:cache --no-interaction` berhasil mengompilasi seluruh Blade.
 - Tidak membangun media library UI terpisah. Form CRUD yang tersedia telah terintegrasi; modul branding/section/sertifikat berikutnya menggunakan layanan yang sama.
+
+
+## 17. Implementasi tahap 6 — Company/Site/Gateway CMS
+
+Diselesaikan 4 Oktober 2026. Menggunakan tabel yang sudah tersedia; tidak membutuhkan migration atau seeding ulang.
+
+- `/admin/sites` menyediakan daftar holding dan anak perusahaan. Editor situs menyediakan pilihan pindah konteks serta tautan ke profil perusahaan.
+- Pengaturan Site: logo/favicon (upload, ganti, hapus melalui MediaManager), teks alternatif, pilihan template sesuai konteks, dua warna, font, lebar konten/bentuk tombol, footer, copyright, tautan sosial HTTP/HTTPS, dan SEO default.
+- Kontak holding melalui contact_details tervalidasi. Identitas dan kontak anak perusahaan tetap pada Company. Permintaan memindah company_id, mengganti slug internal, menulis path media langsung, atau membuat editor nama/kontak tandingan ditolak, termasuk payload kosong.
+- CompanyRequest memisahkan validasi dari controller. Profil, banner, urutan gateway, status, dan kontak tetap dapat diedit. Warna Company hanya dapat diedit untuk data lama tanpa Site; perusahaan dengan Site menggunakan editor warna Site.
+- `/admin/companies/create` membuat Company nonaktif dan bukan demo, satu Site, empat halaman inti draft, serta navigasi header/footer dalam satu transaksi. Kegagalan pembuatan Site membatalkan Company. Tidak menyalin konten contoh atau data kontak rekaan. Upload dilanjutkan pada editor setelah pembuatan.
+- Halaman baru belum memiliki section/item; editor komposisi disediakan tahap 10–11. Publikasi halaman dilakukan melalui tahap 7. Seeder bukan alat melengkapi ulang situs baru.
+- DELETE Company hanya menerima perusahaan nonaktif tanpa Site, katalog, pilar, proses, layanan, atau inquiry. Guard dijalankan dalam transaksi MediaManager setelah row lock. DELETE Site ditolak untuk holding maupun anak perusahaan; gunakan nonaktifkan.
+- Gateway, navigasi perusahaan, profil, dan endpoint inquiry menghormati status Company/Site serta Home draft jika Home tersedia. Situs holding nonaktif menyembunyikan root portal. Data legacy tanpa Site/Home masih didukung sampai resolver penuh tahap 13.
+- Warna hero publik lama membaca Site dengan fallback Company. Penyimpanan template/footer/SEO/logo tidak berarti seluruh renderer dinamis atau enam desain publik sudah selesai; itu tetap lingkup tahap 13 dan pengerjaan frontend.
+
+### Verifikasi tahap 6
+
+- SiteManagementTest: 10 tes, 98 assertion lulus; meliputi pembuatan atomik/rollback, draft, kepemilikan, autentikasi/otorisasi, field internal kosong, validasi URL/template/media, lifecycle logo, perubahan slug, warna canonical, penolakan penghapusan, dan status publik.
+- Pengujian memakai SQLite :memory: dan Storage fake. Database utama serta berkas logo asli tidak diubah oleh pengujian.
+- Regresi lengkap `vendor/bin/phpunit`: **108 tes, 929 assertion lulus**. Pint, `git diff --check`, dan kompilasi seluruh Blade berhasil.
+
+
+## 18. Implementasi tahap 7 — Pages CMS
+
+Diselesaikan 4 Oktober 2026. Tidak ada perubahan skema maupun seeding ulang database utama.
+
+- Daftar situs dan editor branding memiliki tautan ke `/admin/sites/{site}/pages`. Daftar halaman diurutkan berdasarkan sort_order lalu ID, menampilkan status, penanda halaman inti, jumlah section dan tautan menu langsung.
+- Admin dapat membuat halaman tambahan (default draft), mengganti judul/slug, urutan, draft/publish, meta title, meta description, serta upload/ganti/hapus gambar Open Graph. Validasi melalui PageRequest dan media melalui MediaManager.
+- Slug unik per Site, mengikuti batas 100 karakter dan format lowercase/dash. `inquiry` reserved. Empat slug inti tidak dapat dibuat ulang melalui form halaman tambahan, diganti, atau dihapus; judul, urutan, SEO, dan statusnya tetap dapat diedit.
+- Nested resource memakai scoped route binding: edit/update/delete dengan pasangan Site/Page yang berbeda ditolak 404. Policy dan middleware tetap membatasi seluruh operasi pada admin. site_id dan path media langsung ditolak, termasuk nilai kosong.
+- Perubahan slug mempertahankan ID sehingga target menu yang menggunakan page_id tidak terputus. URL lama tidak mendapat redirect otomatis; form menjelaskan konsekuensinya.
+- Form hapus halaman tambahan menjelaskan cascade section/item, tautan menu langsung serta cabang menu turunannya. MediaManager membersihkan media turunannya setelah commit, mempertahankan file yang masih direferensikan di tempat lain. Halaman inti tetap ditolak oleh guard model di dalam transaksi.
+- Home draft menyembunyikan root holding atau profil anak perusahaan. Untuk anak perusahaan, gateway/navigasi dan inquiry juga mengikuti pemeriksaan publikasi Home yang sudah ada. Admin tetap dapat mengakses editor untuk menerbitkan kembali.
+- Pengaturan halaman, status dan metadata sudah tersimpan melalui CMS. Rendering halaman tambahan, fallback SEO pada renderer publik, filter menu publik, dan preview lengkap tetap tahap 13; editor komposisi section/item tetap tahap 10–11.
+
+### Verifikasi tahap 7
+
+- PageManagementTest: **8 tes, 130 assertion lulus**. Mencakup CRUD, urutan/status, slug per situs, proteksi semua halaman inti, akses lintas situs, validasi, akses guest/non-admin, lifecycle OG image, konflik upload/hapus, cascade section/item/menu, shared media, serta publish/unpublish holding dan anak perusahaan.
+- Pengujian memakai database SQLite :memory: dengan pengaman TestCase dan Storage fake; tidak mereset database utama.
+- Regresi lengkap `vendor/bin/phpunit`: **116 tes, 1.059 assertion lulus**. Route admin telah diperiksa; Pint, `git diff --check`, dan kompilasi seluruh Blade berhasil.
+
+
+## 19. Implementasi tahap 8 — Katalog, pilar, dan proses
+
+- Tiap perusahaan memiliki daftar terpisah `/admin/companies/{company}/{type}` untuk products, pillars, dan process-steps. Profil perusahaan menampilkan jumlah serta tautan pengelolaan, sehingga tidak memuat semua record sekaligus.
+- Daftar menyediakan pencarian nama/judul/deskripsi, filter status aktif/nonaktif, pagination 15 record, urutan sort_order lalu ID, dan parameter filter yang dipertahankan saat pindah halaman. Produk juga memiliki filter kategori; pilihan kategori hanya diambil dari perusahaan terkait.
+- ContentRequest memusatkan validasi create/update dan otorisasi record sesuai perusahaan. ContentFilterRequest memvalidasi pencarian/filter. ID perusahaan dan path media langsung tidak dapat disisipkan, termasuk nilai kosong; tipe modul yang tidak dikenal ditolak.
+- Form create/edit memiliki checkbox aktif dan urutan 0–999. Checkbox create dicentang secara default; payload tanpa is_active disimpan nonaktif, mengikuti perilaku checkbox HTML. Konten nonaktif tetap dapat dikelola admin dan tidak muncul pada profil publik.
+- Produk menyimpan nama, kategori, deskripsi, spesifikasi dan gambar; pilar/proses menyimpan judul dan deskripsi. Tidak ada field transaksi, harga, stok, pembayaran, atau kategori penjualan baru.
+- Upload, penggantian, penghapusan gambar dan delete record tetap melalui MediaManager. Permintaan upload sekaligus hapus gambar ditolak agar maksud operasi jelas. Pilar/proses menolak field media/produk yang tidak sesuai modul.
+- Setelah create/update/delete, admin kembali ke daftar modul terkait. Tombol kembali/batal dan navigasi antar modul tersedia. Form hapus tetap meminta konfirmasi dan dilindungi CSRF, policy serta scoped relationship.
+- Tidak membutuhkan migration atau seeding ulang; menggunakan is_active dan scope active yang sudah tersedia sejak tahap 4.
+
+### Verifikasi tahap 8
+
+- ContentManagementTest dan AdminTest: **16 tes, 203 assertion lulus**, meliputi CRUD ketiga modul, urutan/status publik, filter/status/pagination per perusahaan, kategori lokal, penolakan payload pemindahan pemilik, otorisasi, dan lifecycle media.
+- Regresi lengkap `vendor/bin/phpunit`: **122 tes, 1.191 assertion lulus**. Route CRUD diperiksa, Pint dan `git diff --check` bersih.
+- Pengujian menggunakan SQLite :memory: dan Storage fake. Database utama tidak direset maupun diseed ulang.
+
+
+## 20. Implementasi tahap 9 — Layanan dan relasi perusahaan
+
+- Menu admin **Layanan & perusahaan** membuka `/admin/services`. CRUD tersedia untuk empat kelompok layanan yang sudah ada maupun layanan tambahan; tidak menjalankan ulang seeder atau mengganti data resmi.
+- Daftar memiliki pencarian nama/deskripsi, filter aktif/nonaktif dan perusahaan, pagination 15 record, serta urutan sort_order lalu ID. Profil perusahaan menyediakan tautan langsung ke daftar layanan yang difilter untuk perusahaan tersebut.
+- Form mengelola nama, slug unik, deskripsi, urutan, status, gambar, pilihan perusahaan penyedia, dan urutan tiap relasi. Satu perusahaan dapat memiliki beberapa layanan, dan satu layanan dapat menghubungkan beberapa perusahaan. Kedua arah relasi membaca sort_order pivot yang sama, sesuai skema yang sudah ada.
+- ServiceRequest memvalidasi identitas, gambar, ID perusahaan yang ada, ID duplikat, boolean pilihan, struktur baris relasi, serta urutan 0–999. Tidak menerima image_path langsung. Upload dan hapus gambar sekaligus ditolak.
+- MediaManager.save mendapat callback opsional afterSave yang berjalan **di dalam transaksi yang sama**, sesudah save dan sebelum commit. Callback hanya untuk penulisan relasi DB; tidak boleh melakukan efek samping eksternal atau mengubah media langsung. ServiceController memakainya untuk sync pivot, sehingga kegagalan guard/relasi membatalkan atribut, relasi, dan upload baru sekaligus.
+- Melepas perusahaan dari layanan ditolak bila menu situs perusahaan tersebut masih menarget layanan. Pesan menjelaskan agar mengubah target menu terlebih dahulu atau menonaktifkan layanan. Editor menu sendiri tetap tahap 12. Relasi invalid yang telah ada pada seed tidak dinormalisasi otomatis di tahap ini.
+- Mengganti slug layanan mempertahankan ID target menu. Hard delete melalui CMS ditolak ketika masih memiliki perusahaan **atau** item menu, termasuk item nonaktif. Guard dijalankan setelah row lock dalam transaksi MediaManager; file baru/lama tidak dihapus sebelum keputusan transaksi.
+- Layanan tanpa relasi dapat dihapus; lifecycle gambar menggunakan pemeriksaan referensi dan cleanup setelah commit yang sudah tersedia. Status nonaktif dapat disimpan tanpa memutus relasi.
+- Tidak ada migration baru. Renderer layanan/mega menu publik dan penyembunyian target yang tidak memenuhi syarat tetap diselesaikan pada tahap 12–13; tahap ini menyediakan CRUD, relasi, status dan proteksi data backend.
+
+### Verifikasi tahap 9
+
+- ServiceManagementTest + MediaTest: **20 tes, 104 assertion lulus**. Meliputi CRUD, urutan pivot, status, filter/pagination, otorisasi, validasi slug/perusahaan/gambar, target menu setelah rename, proteksi delete, rollback perubahan/upload saat relasi ditolak, serta lifecycle media bersama regresi layanan media.
+- Database pengujian SQLite :memory: dan Storage fake; database utama tidak direset maupun diseed ulang.
+- Regresi lengkap `vendor/bin/phpunit`: **128 tes, 1.243 assertion lulus**. Pint, `git diff --check`, pemeriksaan route admin, dan kompilasi Blade berhasil.
+
+
+## 21. Implementasi tahap 10 — Page Sections CMS
+
+- Editor halaman menyediakan tautan **Kelola section halaman**. Nested route `/admin/sites/{site}/pages/{page}/sections` menyediakan daftar, tambah, edit, hapus, serta reorder lengkap. Semua route menggunakan scoped binding Site → Page → Section dan policy admin.
+- Key/anchor wajib unik per halaman, lowercase/dash, dan tetap setelah dibuat. Judul, subjudul, urutan 0–999, status aktif dan batas konten opsional 1–100 dapat diatur. Section baru dimulai nonaktif pada form.
+- Pilihan type dibatasi registry dan konteks. Anak perusahaan tidak dapat membuat gateway; holding tidak dapat membuat products/pillars/process. Placeholder lama ketiga tipe pada holding tetap dapat dilihat/diedit tetapi tidak dapat diaktifkan. Variant saat ini hanya default sesuai registry; tidak menerima path template bebas.
+- settings.source diturunkan server dari tipe dan konteks, bukan JSON bebas. Request menolak settings, page_id dan image_path langsung, termasuk nilai kosong.
+- About/history holding menyediakan body teks biasa, gambar, alt, dan CTA opsional. URL CTA hanya HTTP/HTTPS atau anchor valid pada halaman yang sama. Upload JPG/PNG/WebP maksimal 5 MB; upload sekaligus hapus ditolak.
+- Section sumber company, relations, contact_details, atau items tidak menerima body/gambar/CTA tandingan. UI menyediakan tautan ke profil/katalog, layanan, atau kontak sumber utama. Item manual baru dikelola pada tahap 11.
+- Pilihan jenis dilakukan sebelum mengisi form. Pergantian type/variant ditolak bila section memiliki item atau body/gambar/CTA. Guard juga memeriksa nilai original sehingga tidak dapat dilewati dengan mengosongkan field dan mengganti tipe pada request yang sama. Tidak menghapus konten otomatis ketika berganti jenis.
+- Reorder menerima list ID unik yang harus tepat mencakup semua section dari halaman tersebut. Validasi parent dan kelengkapan dilakukan kembali di dalam transaksi dengan row lock; tidak menerima subset, duplikat, array asosiatif atau ID halaman lain. Semua urutan disimpan atomik mulai dari nol.
+- Delete section ditolak jika key/anchor masih dirujuk menu pada halaman tersebut. Sesudah referensi menu dilepas, penghapusan membawa item miliknya melalui MediaManager; cleanup media setelah commit mempertahankan file bersama.
+- UI menjelaskan dampak perubahan pada halaman published dan dampak penghapusan item. Preview serta rendering penuh section publik tetap tahap 13. Tidak menambah skema atau menjalankan seeder pada database utama.
+
+### Verifikasi tahap 10
+
+- Pengujian mencakup CRUD manual holding, sumber otomatis anak perusahaan, validasi CTA/key/settings/variant/limit, lifecycle gambar, lintas situs/halaman, akses non-admin, proteksi type, reorder atomik, menu anchor, cascade item, media bersama dan placeholder holding.
+- SQLite :memory: dan Storage fake digunakan untuk pengujian; database utama tidak direset.
+- Regresi lengkap `vendor/bin/phpunit`: **135 tes, 1.345 assertion lulus**. Pint dan pemeriksaan route selesai; `git diff --check` bersih.
+
+
+## 22. Implementasi tahap 11 — Section Items CMS
+
+Diselesaikan 5 Oktober 2026.
+
+- Editor section dengan sumber items menyediakan **Kelola item section**. Nested route Site → Page → Section → Item menggunakan scoped binding, policy dan autentikasi admin. Section sumber company/relations/contact_details tidak menyediakan CRUD item manual.
+- Form dibuat dari allowlist field registry: carousel (subjudul/narasi/gambar/CTA), clients (logo/tautan), capacity (nilai/satuan/ikon), CSR (narasi/gambar/tanggal/CTA), vision_mission (key vision atau mission dan narasi), certifications (narasi/penerbit/tanggal/gambar/PDF).
+- History tetap bersumber Company atau body manual holding sesuai registry tahap 10. Tidak menciptakan variant history-items yang belum didukung registry.
+- Item baru nonaktif secara default. Judul wajib; key opsional unik dalam section, kecuali visi/misi yang wajib memakai vision/mission. Capacity wajib memiliki value; field tersebut bukan stok produk. Semua teks ditampilkan escaped pada admin.
+- Request menolak field di luar tipe, pemindahan page_section_id, settings mentah, image_path dan file_path langsung. Issuer/icon disusun server menjadi settings tervalidasi. Tanggal memakai format Y-m-d.
+- Tautan hanya HTTP/HTTPS atau #anchor section yang ada pada halaman yang sama; skema script, protocol-relative, path internal belum terselesaikan dan anchor hilang ditolak. Carousel/CSR mensyaratkan pasangan label dan URL bila CTA diisi. Referensi CTA lintas halaman dan migrasi CTA seed lama tetap mengikuti penyelesaian URL pada tahap 13; data seed tidak diubah otomatis.
+- Gambar JPG/PNG/WebP maksimal 5 MB, PDF maksimal 10 MB khusus sertifikasi. Upload/ganti/hapus file melalui MediaManager. Tidak membuat data sertifikasi, klien, kapasitas atau CSR rekaan.
+- Perbaikan aturan konflik upload/hapus memakai Rule::prohibitedIf dengan boolean request, sehingga true, integer 1 dan string "1" konsisten ditolak bila dikirim bersama file baru. Pola sama diperbaiki pada request konten, halaman, section dan layanan.
+- Reorder mewajibkan list lengkap ID unik dari section yang sama, diverifikasi kembali dan disimpan atomik dalam transaksi dengan row lock. Urutan manual per item juga tersedia. Delete menghapus item di parent yang benar dan menjalankan cleanup media setelah commit, mempertahankan media yang masih digunakan.
+- UI menjelaskan perubahan item aktif pada halaman published. Rendering item publik beserta filter status seluruh induknya dan preview tetap tahap 13; file dan data disiapkan melalui backend ini.
+- Tidak ada migration atau seeding ulang database utama.
+
+### Verifikasi tahap 11
+
+- SectionItemManagementTest + MediaTest: **20 tes, 213 assertion lulus**. Meliputi form/CRUD seluruh tipe, status, key visi/misi, sumber relasional, isolasi parent, otorisasi, field/tautan terlarang, PDF palsu berdasarkan MIME aktual, batas ukuran, lifecycle dua media, konflik upload/hapus boolean, dan reorder lengkap.
+- Pengujian memakai SQLite :memory: dan Storage fake, bukan database utama.
+- Regresi lengkap `vendor/bin/phpunit`: **141 tes, 1.506 assertion lulus**. Pemeriksaan route, Pint, `git diff --check`, dan kompilasi seluruh Blade berhasil.
+
+
+## 23. Implementasi tahap 12 — Menus CMS
+
+Diselesaikan 5 Oktober 2026.
+
+- Editor situs menyediakan **Kelola menu header/footer**. Slot menu hanya dapat diedit nama/statusnya; tidak menyediakan route create/delete atau pengubahan key/site_id. Item menu menggunakan nested scoped binding Site → Menu → Item, autentikasi admin dan policy.
+- CRUD item meliputi label, key opsional unik dalam menu, bentuk link/mega_menu, parent, urutan, status, dan tab baru. Form menampilkan daftar item beserta nama induk dan jumlah anak; pindah induk melalui editor.
+- Jenis target eksplisit page/service/url/heading. Hanya satu target boleh diisi; ketika jenis berubah, kolom target lama dikosongkan. Heading tidak menyimpan URL atau flag tab baru. Halaman harus berasal dari site yang sama, anchor harus ada pada halaman tersebut. Service anak perusahaan hanya boleh dipilih dari pivot perusahaan pemilik site; holding dapat mengelola target Service global.
+- Target URL eksternal hanya HTTP/HTTPS. Tidak menerima javascript/data/protocol-relative atau string path internal; tautan internal memakai Page ID dan anchor. Draft/nonaktif boleh disiapkan dalam menu admin, dengan status ditampilkan pada pilihan. Pemfilteran target dan cabang publik dilakukan pada resolver tahap 13.
+- MenuEditor menyimpan perubahan item dalam transaksi dengan lock menu dan item. Memeriksa seluruh pohon termasuk kedalaman turunannya: tidak ada siklus, parent beda menu, atau kedalaman lebih dari tiga tingkat. Memindahkan induk yang menyebabkan turunannya melampaui batas ditolak tanpa menyimpan perubahan.
+- Reorder tersedia per kelompok saudara/parent. Mewajibkan list lengkap ID unik dari parent dan menu yang sama, diverifikasi di dalam transaksi lalu disimpan atomik. Pemindahan parent dilakukan lewat editor item dan tetap menjalankan validasi seluruh pohon.
+- Item beranak tidak dapat dihapus; pindahkan/hapus anak terlebih dahulu. Sebagai penyelarasan proteksi menu, PageController kini menolak penghapusan halaman tambahan yang masih ditarget menu. Ini memperketat perilaku cascade yang diterapkan pada tahap 7; UI dan regresi halaman diperbarui. Setelah target dilepas, section/item/media halaman tetap dibersihkan melalui MediaManager.
+- Seeder baru tetap mempertahankan record menu layanan tetapi menandai nonaktif target yang tidak terhubung perusahaan pemiliknya. Seeder lama tidak dijalankan ulang.
+- Perintah `cms:normalize-menu-services` melakukan audit target layanan aktif pada situs anak tanpa perubahan; `--apply` hanya mengubah status target yang tidak sesuai menjadi nonaktif, mempertahankan label, ID, target, parent, dan urutan. Perintah idempotent dan telah diuji.
+- Audit database utama menemukan **18 item** layanan tidak sesuai konteks. `cms:normalize-menu-services --apply --no-interaction` berhasil menonaktifkan **18 item** tersebut. Tidak menghapus konten, mengubah layanan/pivot, atau mereset database. Admin harus memilih target valid sebelum mengaktifkan ulang item tersebut.
+- Belum mengganti navigasi publik lama dengan renderer menu dinamis. Penyembunyian cabang induk nonaktif, target draft/hilang, heading/mega menu kosong, pemilihan perusahaan publik untuk service holding, dan resolusi URL canonical diselesaikan bersama tahap 13.
+
+### Verifikasi tahap 12
+
+- MenuManagementTest, PageManagementTest, DynamicContentTest: **28 tes, 298 assertion lulus**. Meliputi CRUD seluruh target, slot tetap, akses admin, scoped binding, anchor, service perusahaan, URL aman, siklus/kedalaman subtree, delete beranak, reorder saudara, normalisasi idempotent, serta regresi halaman dan seed.
+- Pengujian memakai SQLite :memory:, terpisah dari audit/normalisasi database utama.
+- Regresi lengkap `vendor/bin/phpunit`: **147 tes, 1.575 assertion lulus**. Pemeriksaan route, Pint, `git diff --check`, dan kompilasi Blade berhasil. Audit ulang database utama melaporkan **0 target layanan aktif tidak sesuai konteks**.
+
+## 24. Implementasi tahap 13 — Resolver publik dan preview
+
+Diselesaikan 6 Oktober 2026.
+
+- PublicContent dan DynamicPortalController menghubungkan Site → Page → Section → Item dengan renderer Blade. Urutan, status, sumber konten dan batas jumlah record mengikuti registry/CMS. Katalog, pilar dan proses tetap bersumber dari perusahaan pemilik halaman.
+- URL holding memakai `/`, `/about-us`, `/services`, `/contact`, serta `/pages/{slug}` untuk halaman tambahan. Anak perusahaan memakai `/{company_slug}` dan `/{company_slug}/{page_slug}`. Alias Home diarahkan ke URL canonical.
+- Akses publik mensyaratkan site aktif dan halaman published. Anak perusahaan juga wajib aktif serta memiliki Site dan Home published. Fallback legacy tanpa Site/Home dihentikan. Section/item nonaktif dan tipe atau sumber yang tidak sesuai konteks tidak dirender.
+- Header/footer membaca pohon menu CMS. Cabang induk nonaktif, target draft/hilang, anchor tidak tersedia, URL tidak aman, heading kosong dan mega menu kosong disembunyikan. Layanan harus sesuai perusahaan dan tersedia pada section layanan publik; anchor layanan menyertakan key section dan ID service.
+- CTA seed `#products` dan `#contact` diselesaikan ke section tujuan pada halaman services/contact dalam site yang sama. Target yang tidak tersedia tidak menjadi tautan. Tidak mengubah ulang data seed utama.
+- Logo, favicon, warna, font yang diizinkan, footer, kontak dan metadata SEO membaca Site/Page. Template memakai allowlist. Implementasi menyediakan renderer fungsional dengan variasi dasar per brand; enam desain final tetap pekerjaan frontend tersendiri.
+- Katalog menyediakan filter kategori dan dialog detail; gateway menyediakan dialog ringkasan perusahaan. JavaScript filter dibatasi ke katalog masing-masing dan menangani lebih dari satu menu.
+- Tombol **Preview halaman** tersedia pada editor halaman. Route `/admin/sites/{site}/pages/{page}/preview` menggunakan autentikasi, policy dan scoped binding; preview draft/nonaktif diberi noindex/nofollow serta private/no-store. Form inquiry tidak ditampilkan di preview. Gateway dan layanan terkait tetap memakai kumpulan perusahaan publik, bukan seluruh draft perusahaan.
+- Form holding menyediakan pilihan perusahaan publik; pengiriman tetap menuju inquiry perusahaan yang dipilih. Form perusahaan memakai tujuan dari route. Penyempurnaan inbox dan alur inquiry menjadi tahap 14.
+- Resolver memakai eager loading serta cache selama request untuk kumpulan perusahaan, layanan dan section. Tidak ada perubahan dependency, migration, reset atau seeding ulang database utama pada tahap ini.
+
+### Verifikasi tahap 13
+
+- Regresi lengkap `vendor/bin/phpunit`: **156 tes, 1.704 assertion lulus**, diperiksa ulang 6 Oktober 2026 menggunakan database pengujian SQLite :memory:.
+- PublicContentTest mencakup seluruh halaman inti tujuh site, URL canonical, isolasi konten, status publik, otorisasi dan header preview, menu tidak valid, branding/SEO, escaping, tujuan inquiry, serta pengurutan/batas item. Fixture pengujian lama disesuaikan agar memiliki Site/Home yang valid.
+- Build frontend berhasil. Pint, kompilasi Blade dan `git diff --check` berhasil.
+- Pemeriksaan screenshot Chrome lokal dilakukan pada portal desktop dan halaman layanan Globalindo ukuran ponsel. Ini pemeriksaan rendering dasar, bukan acceptance lengkap seluruh interaksi atau enam desain final.
+
+
+## 25. Implementasi tahap 14 — Kontak dan inbox
+
+Diselesaikan 6 Oktober 2026.
+
+- StoreInquiryRequest memusatkan validasi nama/email/telepon/subjek/pesan, consent dan honeypot bertipe string. Hanya field pesan yang diteruskan ke penyimpanan; status/read_at dari pengunjung tidak digunakan. Tujuan form perusahaan berasal dari route, sementara form holding wajib memilih perusahaan yang tersedia publik.
+- Rate limiter bernama inquiries membatasi lima percobaan per menit per IP secara bersama pada kedua endpoint, termasuk percobaan validasi gagal. Berpindah perusahaan atau memakai form holding tidak memberi kuota baru.
+- Pesan berhasil dikirim melalui holding kembali ke halaman kontak holding. Form perusahaan kembali ke halaman kontak published, atau Home jika halaman kontak tidak tersedia. Anchor berasal dari section contact aktif yang benar-benar dirender, bukan string tetap. Penyimpanan tidak bergantung pada pengiriman email.
+- InboxFilterRequest memvalidasi filter perusahaan, status tindak lanjut, sudah/belum dibaca, pencarian nama/email/subjek, dan halaman pagination. Daftar tetap memuat perusahaan nonaktif agar pesan historis dapat dikelola; pagination mempertahankan filter dan urutan memakai waktu serta ID.
+- GET detail tidak lagi mengubah read_at. Tombol PATCH khusus menandai sudah/belum dibaca; penandaan dibaca berulang mempertahankan waktu baca pertama sampai ditandai belum dibaca. Status new/in_progress/resolved terpisah dari status baca.
+- UpdateInquiryRequest membatasi mutasi pada status dan tindakan baca. Payload pengubahan identitas pengirim, tujuan perusahaan, isi pesan atau timestamp baca langsung ditolak. Detail, perubahan dan hapus tetap dilindungi autentikasi serta policy admin; pesan ditampilkan escaped.
+- Form publik mempertahankan consent saat validasi gagal dan menampilkan kesalahan pemilihan perusahaan. Hapus pesan tetap memakai konfirmasi antarmuka dan DELETE dengan CSRF.
+- Notifikasi email otomatis tidak diaktifkan karena bersifat opsional. Tombol balas membuka aplikasi email; tidak mengklaim SMTP atau worker telah diuji. Tidak ada migration, dependency baru, atau reset/seeding database utama.
+
+### Verifikasi tahap 14
+
+- InquiryManagementTest, PortalTest, AdminTest dan PublicContentTest: **33 tes, 307 assertion lulus**. Meliputi mutasi baca eksplisit/idempotent, pemisahan status, filter/pagination, akses guest/non-admin, batas pengiriman lintas endpoint/perusahaan, anchor dinamis, payload terlarang, honeypot, tujuan pesan, validasi dan penghapusan.
+- Regresi lengkap `vendor/bin/phpunit`: **162 tes, 1.756 assertion lulus**, menggunakan SQLite :memory: yang terpisah dari database utama. Pint, kompilasi Blade, pemeriksaan route inbox dan `git diff --check` berhasil.
+
+
+## 26. Implementasi tahap 15 — Integrasi dan kesiapan operasi
+
+Diselesaikan 6 Oktober 2026 untuk lingkungan lokal. Tidak menjalankan deployment, mengubah `.env`, membuat akun di database utama, atau mereset database utama.
+
+### Implementasi dan bukti
+
+- Menambahkan `cms:check` dan `cms:check --production`: audit hanya-baca key tersedia, build manifest, izin storage/cache, symlink upload, koneksi database, migration dan admin. Mode production juga memeriksa environment, debug, HTTPS URL, cookie secure/HttpOnly, mailer serta penanda data demo. Exit code nonzero jika ada pemeriksaan gagal. Output tidak mencetak kredensial atau detail exception koneksi. Perintah ini pemeriksaan dasar, bukan sertifikasi kesiapan produksi.
+- BackendIntegrationTest menjalankan login Fortify, upload melalui CMS, draft/preview/publish, logout, inquiry dan tindak lanjut inbox dalam satu alur. Middleware PreventRequestForgery tetap berjalan dengan bypass unit-test dinonaktifkan: request mutasi tanpa token/origin yang diterima menghasilkan 419. Media menggunakan Storage fake pada PHPUnit, dan DatabaseMigrations supaya lifecycle commit media benar-benar berjalan.
+- TestCase tetap menolak database biasa. Default SQLite :memory: dipertahankan. Opt-in `CMS_TEST_MYSQL_SOCKET` hanya menerima socket nyata tanpa symlink di pola `/tmp/tj-cms-tests-<nama>/mysql.sock`, environment testing, database tetap `cms_testing`, pengguna tetap `cms_test`. URL/kredensial `.env` tidak dipakai oleh koneksi tes ini. Instance uji memakai skip-networking dan pengguna dibatasi ke database uji.
+- **SQLite: 165 tes, 1.796 assertion lulus.** **Driver mysql pada MariaDB 11.8.6 terisolasi: 165 tes, 1.796 assertion lulus.** Oracle MySQL tidak terpasang dan tidak diklaim diuji. DynamicContentMigrationTest tetap memakai koneksi SQLite internal untuk skenario rollback legacy-nya; tes CMS lain memakai koneksi default yang dipilih.
+- Chrome headless dengan profil baru, database uji dan storage `/tmp`: login admin melalui form berhasil; upload WebP melalui form katalog berhasil; nama produk uji tampil pada katalog publik; toggle Home draft menghasilkan HTTP 404 dan published menghasilkan 200. Ini smoke test browser, bukan acceptance setiap layar/perangkat. Serving gambar baru melalui symlink public/storage khusus storage sementara tidak termasuk bukti browser; persistensi dan pemulihan file diuji terpisah.
+- Backup database demo melalui mysqldump dipulihkan ke `cms_restore` dalam instance sementara. Hasil: 23 tabel, 6 perusahaan, 19 produk (18 seed + 1 upload browser). Dump data sumber dan hasil restore cocok byte-per-byte; arsip media diekstrak ke direktori berbeda dan seluruh file cocok. Ini simulasi data uji, bukan backup/restore database utama atau backup offsite.
+- Worker database dijalankan pada antrean uji kosong dan berhenti normal. Ini membuktikan startup worker dan akses antrean, bukan eksekusi job bisnis, supervisor produksi atau pengiriman email.
+- `npm run build`, Pint, kompilasi Blade, route:cache/route:clear dan git diff --check berhasil. Route cache sengaja dikembalikan clear untuk pengembangan. Server aplikasi/browser/database sementara dihentikan setelah verifikasi.
+
+### Audit lokal dan gate sebelum produksi
+
+| Area | Bukti lokal / pekerjaan tersisa |
+| --- | --- |
+| Database utama | Terhubung; tujuh migration sudah Ran; tidak dimigrasi ulang pada tahap ini |
+| Admin | Belum ada akun admin utama. Pemilik perlu menentukan email/nama dan menjalankan `php artisan admin:create email@domain --name="Nama Admin"` secara interaktif; tanpa password default |
+| Konten | Enam perusahaan masih is_demo; verifikasi isi, gambar, alamat, kontak, klien dan sertifikasi sebelum menonaktifkan penanda demo |
+| Environment | Masih local, debug aktif dan APP_URL HTTP. Di server tujuan gunakan production, debug false, URL HTTPS yang benar, serta session secure dan HttpOnly |
+| Email | Mailer log; reset-password belum terbukti diterima lewat SMTP nyata. Konfigurasikan layanan yang dipilih dan uji penerimaan email pada alamat milik pemilik |
+| Queue | Driver database; belum ada bukti supervisor/worker produksi. Jika memakai job async, kelola worker sebagai service, periksa retry/failed jobs, dan restart worker setelah rilis |
+| Backup | Simulasi database/media uji berhasil. Tetapkan jadwal, retensi, enkripsi, akses terbatas dan penyimpanan terpisah; uji restore backup produksi ke lingkungan terisolasi, termasuk APP_KEY untuk data terenkripsi |
+| Hosting | Belum memeriksa TLS/proxy, web root public, izin server, batas upload/request PHP dan web server, log/monitoring, atau domain produksi |
+| Frontend | Renderer fungsional tersedia; enam desain final sesuai brand dan acceptance lengkap perangkat/peramban tetap pekerjaan terpisah |
+
+### Urutan pemeriksaan ulang dan rilis
+
+1. Lokal: `vendor/bin/phpunit` (SQLite). Jangan menjalankan suite dengan database utama. Untuk engine mysql, siapkan instance socket sementara skip-networking dan database/pengguna terbatas sebagaimana kontrak TestCase, lalu jalankan `CMS_TEST_MYSQL_SOCKET=/tmp/tj-cms-tests-<nama>/mysql.sock vendor/bin/phpunit`.
+2. Jalankan `npm run build`, `vendor/bin/pint --dirty --format agent`, dan `php artisan cms:check --no-interaction`. Audit bisa gagal secara sengaja selama akun admin belum dibuat.
+3. Sebelum rilis: siapkan environment tujuan, backup database + storage/app/public serta konfigurasi/key secara aman, verifikasi data resmi dan akses admin. Jangan menggunakan `composer setup`, migrate:fresh, migrate:refresh atau seeder demo sebagai prosedur update produksi; jangan mengganti APP_KEY instalasi yang sudah menyimpan data terenkripsi.
+4. Di lingkungan tujuan setelah backup: pasang dependency sesuai lock file, build aset, jalankan migration additive yang telah ditinjau, siapkan storage link/izin, lalu cache konfigurasi/route/view. Jalankan `php artisan cms:check --production --no-interaction` dan periksa setiap kegagalan. Jangan membuat config cache produksi sebelum menjalankan tes lokal.
+5. Uji login/logout/2FA, reset-password sampai email diterima, upload dan URL media, draft/publish/preview, menu tiap site, inquiry hingga inbox, pembatasan akses dan rate limit melalui HTTPS. Jalankan worker jika diperlukan dan pastikan pemantauan serta restore drill tersedia sebelum menyatakan siap produksi.

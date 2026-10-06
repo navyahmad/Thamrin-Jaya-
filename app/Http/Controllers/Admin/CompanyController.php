@@ -5,14 +5,13 @@ namespace App\Http\Controllers\Admin;
 use App\Actions\Cms\CreateCompanyWithSite;
 use App\Actions\Cms\MediaManager;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\CompanyRequest;
 use App\Models\Company;
 use App\Models\Inquiry;
 use App\Models\Product;
 use Illuminate\Http\RedirectResponse;
-use App\Http\Requests\CompanyRequest;
-use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Gate;
-
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class CompanyController extends Controller
@@ -32,12 +31,14 @@ class CompanyController extends Controller
     public function create(): View
     {
         Gate::authorize('create', Company::class);
+
         return view('admin.company-create');
     }
 
     public function store(CompanyRequest $request, CreateCompanyWithSite $creator): RedirectResponse
     {
         $company = $creator->create($request->validated());
+
         return to_route('admin.companies.edit', $company)->with('success', 'Perusahaan, situs, empat halaman draft, dan navigasi berhasil dibuat. Lengkapi profil dan branding sebelum mengaktifkan.');
     }
 
@@ -54,6 +55,7 @@ class CompanyController extends Controller
                 throw ValidationException::withMessages(['company' => 'Nonaktifkan perusahaan sebelum menghapus.']);
             }
         });
+
         return to_route('admin.dashboard')->with('success', 'Perusahaan kosong berhasil dihapus.');
     }
 
@@ -61,7 +63,7 @@ class CompanyController extends Controller
     {
         Gate::authorize('update', $company);
 
-        return view('admin.company', ['company' => $company->load(['site', 'products', 'pillars', 'processSteps'])]);
+        return view('admin.company', ['company' => $company->load('site')->loadCount(['products', 'pillars', 'processSteps'])]);
     }
 
     public function update(CompanyRequest $request, Company $company): RedirectResponse

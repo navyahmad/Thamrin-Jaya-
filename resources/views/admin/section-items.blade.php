@@ -1,0 +1,8 @@
+@extends('layouts.admin')
+@section('title', 'Item '.$section->title)
+@section('content')
+<a class="text-link" href="{{ route('admin.sites.pages.sections.edit', [$site, $page, $section]) }}">← {{ $site->resolvedName() }} / {{ $page->title }} / {{ $section->title ?? $section->key }}</a>
+<div class="admin-heading"><div><h1>Item {{ $section->title ?? $section->key }}</h1><p>{{ $section->type }} · {{ $items->count() }} item</p></div><a class="button" href="{{ route('admin.sites.pages.sections.items.create', [$site, $page, $section]) }}">+ Tambah item</a></div>
+<div class="panel">@forelse($items as $item)<div class="content-row"><span class="row-order">{{ $item->sort_order }}</span><div><strong>{{ $item->title }}</strong><p>{{ $item->key }} · {{ $item->is_active ? 'Aktif' : 'Nonaktif' }}</p></div><a class="text-link" href="{{ route('admin.sites.pages.sections.items.edit', [$site, $page, $section, $item]) }}">Edit →</a></div>@empty<p class="empty-state">Belum ada item. Isi hanya informasi perusahaan yang sudah terverifikasi.</p>@endforelse</div>
+@if($items->isNotEmpty())<form class="panel form-panel" method="POST" action="{{ route('admin.sites.pages.sections.items.reorder', [$site, $page, $section]) }}">@csrf @method('PUT')<h2>Urutan seluruh item</h2><p>Pilih satu item berbeda untuk setiap posisi.</p>@foreach($items as $position => $current)<label class="field"><span>Posisi {{ $position + 1 }}</span><select name="ids[]">@foreach($items as $option)<option value="{{ $option->id }}" @selected(old('ids.'.$position, $current->id) == $option->id)>{{ $option->title }} (#{{ $option->id }})</option>@endforeach</select></label>@endforeach<button class="button">Simpan urutan</button></form>@endif
+@endsection

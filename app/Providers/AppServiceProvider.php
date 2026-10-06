@@ -16,7 +16,10 @@ use App\Models\Service;
 use App\Models\Site;
 use App\Models\User;
 use App\Policies\CmsContentPolicy;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -26,6 +29,8 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        RateLimiter::for('inquiries', fn (Request $request): Limit => Limit::perMinute(5)->by($request->ip()));
+
         foreach ([Company::class, Product::class, Pillar::class, ProcessStep::class, Inquiry::class, Site::class, Page::class, PageSection::class, SectionItem::class, Menu::class, MenuItem::class, Service::class] as $model) {
             Gate::policy($model, CmsContentPolicy::class);
         }

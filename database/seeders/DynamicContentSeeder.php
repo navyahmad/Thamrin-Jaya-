@@ -136,6 +136,7 @@ class DynamicContentSeeder extends Seeder
                     foreach (array_values($services) as $index => $service) {
                         $menu->items()->firstOrCreate(['key' => 'service-'.$service->slug], [
                             'parent_id' => $item->id, 'service_id' => $service->id,
+                            'is_active' => ! $site->company_id || $site->company->services()->where('services.id', $service->id)->exists(),
                             'label' => $service->name, 'sort_order' => $index + 1,
                         ]);
                     }

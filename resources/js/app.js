@@ -11,13 +11,16 @@ navigation?.querySelectorAll('a').forEach(link => link.addEventListener('click',
     menuToggle?.setAttribute('aria-expanded', 'false');
 }));
 
-const megaMenu = document.querySelector('.mega-menu');
+const megaMenus = [...document.querySelectorAll('.mega-menu')];
 document.addEventListener('click', event => {
-    if (megaMenu && !megaMenu.contains(event.target)) megaMenu.open = false;
+    megaMenus.forEach(menu => {
+        if (!menu.contains(event.target)) menu.open = false;
+    });
 });
 document.addEventListener('keydown', event => {
     if (event.key === 'Escape') {
-        if (megaMenu?.open) { megaMenu.open = false; megaMenu.querySelector('summary').focus(); }
+        const menu = megaMenus.filter(menu => menu.open).at(-1);
+        if (menu) { menu.open = false; menu.querySelector('summary').focus(); }
         if (navigation?.classList.contains('is-open')) {
             navigation.classList.remove('is-open');
             menuToggle?.setAttribute('aria-expanded', 'false');
@@ -50,11 +53,11 @@ document.querySelectorAll('dialog').forEach(dialog => {
     });
 });
 
-document.querySelector('[data-product-filter]')?.addEventListener('change', event => {
-    document.querySelectorAll('[data-category]').forEach(card => {
+document.querySelectorAll('[data-product-filter]').forEach(filter => filter.addEventListener('change', event => {
+    (filter.closest('[data-catalog]') ?? document).querySelectorAll('[data-category]').forEach(card => {
         card.hidden = event.target.value !== 'all' && card.dataset.category !== event.target.value;
     });
-});
+}));
 
 document.querySelectorAll('form[data-confirm]').forEach(form => {
     form.addEventListener('submit', event => {

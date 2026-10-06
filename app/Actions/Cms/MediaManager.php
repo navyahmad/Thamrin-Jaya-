@@ -64,14 +64,15 @@ class MediaManager
      *
      * @param  array<string, mixed>  $attributes
      * @param  array<string, UploadedFile|null>  $uploads  Null explicitly removes the existing media.
+     * @param  \Closure(Model): void|null  $afterSave  Database-only relation writes inside this transaction; exceptions roll back data and new uploads.
      */
-    public function save(Model $record, array $attributes, array $uploads = []): void
+    public function save(Model $record, array $attributes, array $uploads = [], ?\Closure $afterSave = null): void
     {
         $this->assertOwnTransaction($record);
         $newFiles = [];
         $obsolete = [];
         try {
-            DB::transaction(function () use ($record, $attributes, $uploads, &$newFiles, &$obsolete): void {
+            DB::transaction(function () use ($record, $attributes, $uploads, $afterSave, &$newFiles, &$obsolete): void {
                 if ($record->exists) {
                     $record->setRawAttributes($record->newQuery()->lockForUpdate()->findOrFail($record->getKey())->getAttributes(), true);
                 }
@@ -110,6 +111,7 @@ class MediaManager
                 if (! $record->save()) {
                     throw new RuntimeException('Penyimpanan data dibatalkan.');
                 }
+                $afterSave?->__invoke($record);
             });
         } catch (Throwable $exception) {
             foreach ($newFiles as $path) {
