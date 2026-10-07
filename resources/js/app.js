@@ -1,3 +1,5 @@
+import './journey';
+
 const menuToggle = document.querySelector('[data-menu-toggle]');
 const navigation = document.querySelector('#navigation');
 menuToggle?.addEventListener('click', () => {

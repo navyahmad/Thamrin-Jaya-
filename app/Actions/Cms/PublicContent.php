@@ -72,11 +72,42 @@ class PublicContent
     public function sections(Page $page, bool $preview): Collection
     {
         return $this->sectionCache[$page->id.':'.(int) $preview] ??= $page->sections()->when(! $preview, fn (Builder $query): Builder => $query->active())->get()
-            ->filter(function (PageSection $section) use ($page): bool {
+            ->filter(function (PageSection $section) use ($page, $preview): bool {
                 return in_array($section->type, ContentRegistry::availableSectionTypes($page->site->company_id !== null), true)
                     && $section->variant === 'default'
-                    && ($section->settings['source'] ?? null) === ContentRegistry::source($section->type, $page->site->company_id !== null);
+                    && ($section->settings['source'] ?? null) === ContentRegistry::source($section->type, $page->site->company_id !== null)
+                    && ($preview || ! $this->isEmpty($section, $page->site));
             });
+    }
+
+    /**
+     * Text and image of an about/history section: company profile for subsidiaries, the section itself for the holding.
+     *
+     * @return array{body: ?string, image: ?string}
+     */
+    public function narrative(PageSection $section, Site $site): array
+    {
+        if ($site->company) {
+            return $section->type === 'about'
+                ? ['body' => $site->company->about, 'image' => $site->company->about_image_path]
+                : ['body' => $site->company->history, 'image' => null];
+        }
+
+        return ['body' => $section->body, 'image' => $section->image_path];
+    }
+
+    /** Sections that would render only a heading are left out of the public page. */
+    private function isEmpty(PageSection $section, Site $site): bool
+    {
+        if ($section->type === 'map') {
+            return blank($site->resolvedContactDetails()['map_query'] ?? null);
+        }
+        if (! in_array($section->type, ['about', 'history'], true)) {
+            return false;
+        }
+        $narrative = $this->narrative($section, $site);
+
+        return blank($narrative['body']) && blank($narrative['image']);
     }
 
     public function records(PageSection $section, Site $site, bool $preview): Collection
