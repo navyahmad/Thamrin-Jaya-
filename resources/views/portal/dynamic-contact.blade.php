@@ -1,5 +1,10 @@
-<div class="inquiry-grid"><div><dl class="contact-details">@foreach(['address' => 'Alamat', 'hours' => 'Jam operasional', 'phone' => 'Telepon', 'email' => 'Email'] as $key => $label)@if(!empty($contact[$key]))<div><dt>{{ $label }}</dt><dd>{{ $contact[$key] }}</dd></div>@endif @endforeach</dl>
-@if(preg_match('/^[1-9][0-9]{7,14}$/', $contact['whatsapp'] ?? ''))<a class="button" href="https://wa.me/{{ $contact['whatsapp'] }}" target="_blank" rel="noopener noreferrer">WhatsApp Sales ↗</a>@endif</div>
+@php
+$details = array_filter(array_intersect_key($contact, array_flip(['address', 'hours', 'phone', 'email'])));
+$whatsapp = preg_match('/^[1-9][0-9]{7,14}$/', $contact['whatsapp'] ?? '') ? $contact['whatsapp'] : null;
+@endphp
+<div @class(['inquiry-grid', 'is-single' => ! $details && ! $whatsapp])>
+@if($details || $whatsapp)<div><dl class="contact-details">@foreach(['address' => 'Alamat', 'hours' => 'Jam operasional', 'phone' => 'Telepon', 'email' => 'Email'] as $key => $label)@if(!empty($contact[$key]))<div><dt>{{ $label }}</dt><dd>{{ $contact[$key] }}</dd></div>@endif @endforeach</dl>
+@if($whatsapp)<a class="button" href="https://wa.me/{{ $whatsapp }}" target="_blank" rel="noopener noreferrer">WhatsApp Sales ↗</a>@endif</div>@endif
 @if($preview)<p>Form inquiry dinonaktifkan pada preview.</p>@else
 <form class="inquiry-form" method="POST" action="{{ $company ? route('company.inquiry', $company->slug) : route('group.inquiry') }}">@csrf
 @if(!$company)<label class="field"><span>Tujuan perusahaan</span><select name="company_id" required><option value="">Pilih perusahaan</option>@foreach($content->companies() as $unit)<option value="{{ $unit->id }}" @selected(old('company_id') == $unit->id)>{{ $unit->name }}</option>@endforeach</select>@error('company_id')<small class="field-error">{{ $message }}</small>@enderror</label>@endif

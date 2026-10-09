@@ -50,6 +50,12 @@ class Site extends Model
         return $this->company?->name ?? $this->name;
     }
 
+    /** The holding is always dark; subsidiaries follow their brand skin so logos stay legible. */
+    public function appearance(): string
+    {
+        return $this->company_id !== null && in_array($this->template_key, ContentRegistry::LIGHT_SURFACE_TEMPLATES, true) ? 'light' : 'dark';
+    }
+
     public function resolvedSlug(): string
     {
         return $this->company?->slug ?? $this->slug;

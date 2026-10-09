@@ -121,6 +121,41 @@ class PublicContentTest extends TestCase
         $this->get('/')->assertOk()->assertSee('Public subsidiary')->assertDontSee('Missing site subsidiary')->assertDontSee('Draft home subsidiary');
     }
 
+    public function test_group_home_renders_units_as_scroll_journey_with_a_single_page_heading(): void
+    {
+        $this->seed();
+        $first = Company::orderBy('sort_order')->firstOrFail();
+
+        $response = $this->get('/')->assertOk()
+            ->assertSee('data-journey', false)
+            ->assertSee('id="company-'.$first->id.'"', false)
+            ->assertSee(route('company.show', $first->slug), false);
+
+        $this->assertSame(1, substr_count($response->getContent(), '<h1'));
+        $this->assertSame(Company::count(), substr_count($response->getContent(), 'class="journey-layer'));
+    }
+
+    public function test_holding_and_light_logo_brands_get_matching_surface(): void
+    {
+        $this->seed();
+
+        $this->get('/')->assertSee('cms-public is-dark', false);
+        $this->get(route('company.show', 'multipack'))->assertSee('cms-public is-dark', false);
+        $this->get(route('company.show', 'globalindo'))->assertSee('cms-public is-light', false);
+    }
+
+    public function test_sections_that_would_only_show_a_heading_are_hidden_publicly_but_kept_in_preview(): void
+    {
+        $site = $this->publishSite();
+        $home = $site->pages()->where('slug', 'home')->firstOrFail();
+        PageSection::factory()->for($home)->create(['key' => 'about', 'type' => 'about', 'title' => 'Empty about heading', 'body' => null, 'image_path' => null, 'settings' => ['source' => 'manual']]);
+        PageSection::factory()->for($home)->create(['key' => 'map', 'type' => 'map', 'title' => 'Empty map heading', 'settings' => ['source' => 'contact_details']]);
+
+        $this->get('/')->assertOk()->assertDontSee('Empty about heading')->assertDontSee('Empty map heading');
+        $this->actingAs(User::factory()->create(['is_admin' => true]))
+            ->get(route('admin.sites.pages.preview', [$site, $home]))->assertSee('Empty about heading')->assertSee('Empty map heading');
+    }
+
     public function test_valid_service_menu_resolves_rendered_anchor_and_disappears_when_target_inactive(): void
     {
         $this->seed();

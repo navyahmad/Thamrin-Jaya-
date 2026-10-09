@@ -13,6 +13,9 @@ class ContentRegistry
 {
     public const TEMPLATES = ['default', 'group-gateway', 'globalindo', 'multipack', 'hte-rotopack', 'maxtech', 'sinar-jaya', 'top-printing'];
 
+    /** Brand skins whose logos are drawn in dark ink and need a light surface; every other public site is dark. */
+    public const LIGHT_SURFACE_TEMPLATES = ['default', 'globalindo', 'top-printing'];
+
     public const TYPES = ['gateway', 'carousel', 'about', 'history', 'services', 'group', 'products', 'pillars', 'process', 'clients', 'capacity', 'csr', 'vision_mission', 'certifications', 'map', 'contact'];
 
     public static function validateSite(Site $site): void
