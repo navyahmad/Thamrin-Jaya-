@@ -271,4 +271,22 @@ class PublicContentTest extends TestCase
             ->assertSee('Form inquiry belum tersedia')
             ->assertDontSee('class="inquiry-form"', false);
     }
+
+    public function test_holding_navbar_shows_only_service_and_renders_showcase_page_and_cta_banner(): void
+    {
+        $this->seed();
+
+        $this->get('/')
+            ->assertOk()
+            ->assertSee('<nav id="navigation" class="cms-nav" aria-label="Navigasi utama"><a href="'.route('group.services').'" >Service</a></nav>', false)
+            ->assertSee('cms-showcase-banner', false)
+            ->assertSee('Lihat Showcase Layanan');
+
+        $this->get(route('group.services'))
+            ->assertOk()
+            ->assertSee('PT Thamrin Jaya Group')
+            ->assertSee('showcase/style.css', false)
+            ->assertSee('showcase/app.js', false)
+            ->assertSee(route('company.show', 'globalindo'), false);
+    }
 }

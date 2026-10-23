@@ -64,6 +64,13 @@ class DynamicPortalController extends Controller
         abort_unless($preview || $content->pageVisible($page), 404);
         $site->load('company');
         $page->setRelation('site', $site);
+        if ($site->company_id === null && $page->slug === 'services') {
+            return response()->view('portal.showcase', [
+                'site' => $site,
+                'page' => $page,
+                'preview' => $preview,
+            ])->withHeaders($preview ? ['X-Robots-Tag' => 'noindex, nofollow', 'Cache-Control' => 'private, no-store'] : []);
+        }
         $template = in_array($site->template_key, ContentRegistry::TEMPLATES, true) ? $site->template_key : 'default';
         $onePage = $site->company_id !== null && $page->slug === 'home';
 

@@ -33,7 +33,21 @@
 <span class="cms-number">{{ str_pad((string) $loop->iteration, 2, '0', STR_PAD_LEFT) }}</span><h3>{{ $record->title }}</h3><p class="cms-copy">{{ $record->description }}</p></li>@endforeach</ol>
 @break
 @case('services')
+@if($subsidiaryLayout)
 <div class="cms-cards">@foreach($records as $service)<article class="cms-card" id="{{ $sectionAnchor }}-service-{{ $service->id }}">@php($image = \App\Actions\Cms\MediaManager::url($service->image_path)) @php($illustration = !$image && $company && in_array($company->illustration, ['boxes', 'carton', 'pouch', 'machine', 'rolls', 'print'], true) ? asset('images/'.$company->illustration.'.svg') : null) @if($image)<img src="{{ $image }}" alt="{{ $service->name }}" loading="lazy">@elseif($subsidiaryLayout)<div class="gp-placeholder gp-catalog-placeholder"><span aria-hidden="true">▧</span><span>Foto belum tersedia</span></div>@elseif($illustration)<div class="cms-media-fallback"><img src="{{ $illustration }}" alt="Ilustrasi bidang {{ $company->sector }}" loading="lazy"><span>Ilustrasi bidang</span></div>@endif<h3>{{ $service->name }}</h3>@if($service->description)<p class="cms-copy">{{ $service->description }}</p>@endif<div class="cms-links">@foreach($service->companies as $unit)@if(!$company || $company->id === $unit->id)<a class="cms-link" href="{{ route('company.show', $unit->slug) }}">{{ $unit->short_name }} <span aria-hidden="true">›</span></a>@endif @endforeach</div></article>@endforeach</div>
+@else
+<div class="cms-showcase-banner">
+<div class="cms-showcase-copy">
+<span class="cms-kicker">Katalog &amp; Layanan Grup</span>
+<h3>Jelajahi produk dan layanan dari enam perusahaan kami</h3>
+<p class="cms-copy">Temukan 30 produk dan layanan mulai dari material rokok, percetakan kemasan, mesin industri, hingga konversi karton dalam tampilan showcase interaktif.</p>
+@if($records->isNotEmpty())<ul class="cms-showcase-tags" aria-label="Bidang layanan">@foreach($records as $service)<li id="{{ $sectionAnchor }}-service-{{ $service->id }}">{{ $service->name }}</li>@endforeach</ul>@endif
+</div>
+<div class="cms-showcase-action">
+<a class="button" href="{{ route('group.services') }}">Lihat Showcase Layanan <span aria-hidden="true">→</span></a>
+</div>
+</div>
+@endif
 @break
 @case('map')
 @if(!empty($contact['map_query']))<div class="map-container"><iframe title="Lokasi {{ $site->resolvedName() }}" src="https://maps.google.com/maps?q={{ rawurlencode($contact['map_query']) }}&output=embed" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe></div>
